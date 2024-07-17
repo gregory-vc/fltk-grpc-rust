@@ -63,12 +63,6 @@ pub struct MyGreeter {
     data: SharedData,
 }
 
-// impl fmt::Display for Circle {
-//     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-//         write!(f, "Circle of radius {}", self.radius)
-//     }
-// }
-
 #[tonic::async_trait]
 impl Greeter for MyGreeter {
     async fn say_hello(
@@ -110,11 +104,11 @@ async fn server(out1: TextBuffer, ff1: Frame) -> Result<(), Box<dyn std::error::
 }
 
 #[tokio::main]
-async fn req_client() -> Result<(), Box<dyn std::error::Error>> {
+async fn req_client(ss2: Arc<Input>) -> Result<(), Box<dyn std::error::Error>> {
     let mut client = GreeterClient::connect("http://[::1]:50051").await?;
 
     let request = tonic::Request::new(HelloRequest {
-        name: "Tonic23123123".into(),
+        name: ss2.value().into(),
     });
 
     println!("request={:?}", request);
@@ -137,7 +131,7 @@ fn draw_gallery() -> (TextBuffer, Frame) {
     // let _but1 = Button::default().with_label("Button");
     // let _but2 = RoundButton::default().with_label("Round");
     // let _but3 = CheckButton::default().with_label("Check");
-    // let _but4 = LightButton::default().with_label("Light");
+    
     // let mut but5 = MenuButton::default().with_label("Type");
     // but5.add_choice("Text|Bool|Enum");
    
@@ -151,7 +145,20 @@ fn draw_gallery() -> (TextBuffer, Frame) {
 
     let mut _but6 = ReturnButton::default().with_label("Return");
     col.end();
+
+
+    let mut col = Flex::default().column();
+    grp1.fixed(&col, 400);
+    col.set_pad(10);
+    col.set_margin(10);
+
+    let mut inp = Input::default();
+    inp.set_value("rust");
+
+    col.end();
     grp1.end();
+
+    
 
     let mut grp2 = Flex::default_fill().with_label("Server\t\t").row();
 
@@ -181,12 +188,14 @@ fn draw_gallery() -> (TextBuffer, Frame) {
     disp.set_buffer(buf.clone());
 
     // let out: Output = Output::default();
-    
+    let wrapped_inp = Arc::new(inp);
+
 
     _but6.set_callback(move |_| {
-
+        let inp = wrapped_inp.clone();
+        
         let _ = thread::spawn(|| {
-            let _= req_client();
+            let _= req_client(inp);
         });
        
     });
@@ -205,7 +214,7 @@ fn main() {
     app::background(221, 221, 221);
 
     let mut wind = Window::default()
-        .with_size(500, 450)
+        .with_size(700, 450)
         .with_label("fltk grps rust")
         .center_screen();
 

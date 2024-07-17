@@ -16,46 +16,9 @@ use std::thread;
 use std::time::Duration;
 use std::sync::{Arc, Mutex};
 use hello_world::greeter_client::GreeterClient;
-use std::cell::RefCell;
-use std::rc::Rc;
 
 pub mod hello_world {
     tonic::include_proto!("helloworld");
-}
-
-pub struct MyEvent;
-
-impl MyEvent {
-    const CHANGED: i32 = 40;
-}
-
-#[derive(Clone)]
-pub struct Counter {
-    count: Rc<RefCell<i32>>,
-}
-
-impl Counter {
-    #[must_use]
-    pub fn new(val: i32) -> Self {
-        Counter {
-            count: Rc::from(RefCell::from(val)),
-        }
-    }
-
-    pub fn increment(&mut self) {
-        *self.count.borrow_mut() += 1;
-        app::handle_main(MyEvent::CHANGED).unwrap();
-    }
-
-    pub fn decrement(&mut self) {
-        *self.count.borrow_mut() -= 1;
-        app::handle_main(MyEvent::CHANGED).unwrap();
-    }
-
-    #[must_use]
-    pub fn value(&self) -> i32 {
-        *self.count.borrow()
-    }
 }
 
 const GRAY: Color = Color::from_hex(0x757575);
@@ -130,7 +93,7 @@ fn intercept(req: Request<()>) -> Result<Request<()>, Status> {
 }
 
 #[tokio::main]
-async fn server(out1: TextBuffer, ff1: Counter) -> Result<(), Box<dyn std::error::Error>> {
+async fn server(out1: TextBuffer, ff1: Frame) -> Result<(), Box<dyn std::error::Error>> {
     let addr = "[::1]:50051".parse()?;
     let mut greeter = MyGreeter::default();
 
@@ -163,7 +126,7 @@ async fn req_client() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-fn draw_gallery() -> (TextBuffer, Frame, Counter) {
+fn draw_gallery() -> (TextBuffer, Frame) {
     let mut tab = Tabs::default_fill();
 
     let mut grp1 = Flex::default_fill().with_label("Client\t\t").row();
@@ -175,11 +138,14 @@ fn draw_gallery() -> (TextBuffer, Frame, Counter) {
     // let _but2 = RoundButton::default().with_label("Round");
     // let _but3 = CheckButton::default().with_label("Check");
     // let _but4 = LightButton::default().with_label("Light");
-    // let mut but5 = MenuButton::default().with_label("Menu");
-    // but5.add_choice("Hello|World|From|Rust");
+    // let mut but5 = MenuButton::default().with_label("Type");
+    // but5.add_choice("Text|Bool|Enum");
    
-    // let mut chce = Choice::default();
-    // chce.add_choice("Hello");
+    let mut chce = Choice::default();
+    chce.add_choice("Text");
+    chce.add_choice("Bool");
+    chce.add_choice("Enum");
+
     // let _inp = Input::default();
 
 
@@ -190,27 +156,23 @@ fn draw_gallery() -> (TextBuffer, Frame, Counter) {
     let mut grp2 = Flex::default_fill().with_label("Server\t\t").row();
 
     let mut col2 = Flex::default().column();
-    grp2.fixed(&col2, 40);
+    grp2.fixed(&col2, 70);
     col2.set_pad(10);
     col2.set_margin(10);
 
-    let counter = Counter::new(0);
-
     let mut count = frame::Frame::default()
-    .with_label(&counter.value().to_string())
-    .with_align(Align::RightTop);
+    .with_label("0")
+    .with_align(Align::Center);
 
     col2.end();
 
     let mut col2 = Flex::default().column();
     grp2.fixed(&col2, 400);
-    col2.set_pad(10);
+    col2.set_pad(50);
     col2.set_margin(10);
 
     count.set_label_size(36);
     count.set_label_color(GRAY);
-
-
 
     let mut disp = TextDisplay::new(5, 5, 390, 250, None);
 
@@ -234,7 +196,7 @@ fn draw_gallery() -> (TextBuffer, Frame, Counter) {
     tab.end();
     tab.auto_layout();
 
-    (buf, count, counter)
+    (buf, count)
 }
 
 fn main() {
@@ -247,19 +209,10 @@ fn main() {
         .with_label("fltk grps rust")
         .center_screen();
 
-    let (oo4, mut fr5, cn6) = draw_gallery();
-
-    fr5.handle(move |f, ev| {
-        if ev == MyEvent::CHANGED.into() {
-            f.set_label(&cn6.clone().value().to_string());
-            true
-        } else {
-            false
-        }
-    });
+    let (oo4, fr5) = draw_gallery();
 
     thread::spawn(move || {
-        let _ = server(oo4, cn6);
+        let _ = server(oo4, fr5);
     });
 
 

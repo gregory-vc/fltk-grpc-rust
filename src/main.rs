@@ -1,14 +1,10 @@
 use fltk::{
-    app,
-    button::*,
-    group::{Flex, Tabs},
-    input::Input,
-    menu::{Choice, MenuButton},
-    output::Output,
-    prelude::{GroupExt, InputExt, MenuExt, WidgetBase, WidgetExt, WindowExt},
-    window::Window,
-    frame,
-    enums::{Align, Color, Font, FrameType},
+    app, button::*, enums::{Align, Color, Font, FrameType}, frame::{self, Frame}, group::{Flex, Tabs}, text::{TextBuffer, TextDisplay},
+     input::Input, menu::{Choice, MenuButton}, output::Output, prelude::{GroupExt, InputExt, MenuExt, WidgetBase, WidgetExt, WindowExt}, window::Window,
+
+     button::Button,
+     prelude::*,
+
 };
 
 use tonic::{transport::Server, Request, Response, Status};
@@ -19,42 +15,89 @@ use hello_world::{HelloReply, HelloRequest};
 use std::thread;
 use std::time::Duration;
 use std::sync::{Arc, Mutex};
+use hello_world::greeter_client::GreeterClient;
+use std::cell::RefCell;
+use std::rc::Rc;
 
 pub mod hello_world {
     tonic::include_proto!("helloworld");
 }
 
+pub struct MyEvent;
+
+impl MyEvent {
+    const CHANGED: i32 = 40;
+}
+
+#[derive(Clone)]
+pub struct Counter {
+    count: Rc<RefCell<i32>>,
+}
+
+impl Counter {
+    #[must_use]
+    pub fn new(val: i32) -> Self {
+        Counter {
+            count: Rc::from(RefCell::from(val)),
+        }
+    }
+
+    pub fn increment(&mut self) {
+        *self.count.borrow_mut() += 1;
+        app::handle_main(MyEvent::CHANGED).unwrap();
+    }
+
+    pub fn decrement(&mut self) {
+        *self.count.borrow_mut() -= 1;
+        app::handle_main(MyEvent::CHANGED).unwrap();
+    }
+
+    #[must_use]
+    pub fn value(&self) -> i32 {
+        *self.count.borrow()
+    }
+}
+
 const GRAY: Color = Color::from_hex(0x757575);
 
 #[derive(Clone, Debug, Default)]
-pub struct Outputer {
+pub struct SharedData {
     shared: Arc<Shared>,
 }
 
 #[derive(Debug, Default)]
 struct Shared {
-    out: Mutex<Output>
+    out: Mutex<TextBuffer>,
+    frame: Mutex<Frame>
 }
 
 
-impl Outputer {
-    pub fn new(oo: Output) -> Self {
+impl SharedData {
+    pub fn new(oo: TextBuffer, ff: Frame) -> Self {
         Self {
             shared: Arc::new(Shared {
-                out: Mutex::new(oo)
+                out: Mutex::new(oo),
+                frame: Mutex::new(ff)
             })
         }
     }
 
     pub fn update(&self, key: String)  {
         let mut oo3 = self.shared.out.lock().unwrap();
-        oo3.set_value(&key)
+        oo3.append(&key);
+        oo3.append("\n");
+    }
+
+    pub fn count(&self)  {
+        let mut oo3 = self.shared.frame.lock().unwrap();
+        let label = (oo3.label().parse::<i32>().unwrap() + 1).to_string();
+        oo3.set_label(&label);
     }
 }
 
 #[derive(Debug, Default)]
 pub struct MyGreeter {
-    out: Outputer,
+    data: SharedData,
 }
 
 // impl fmt::Display for Circle {
@@ -70,13 +113,14 @@ impl Greeter for MyGreeter {
         request: Request<HelloRequest>, 
     ) -> Result<Response<HelloReply>, Status> {
         println!("Got a request: {:?}", request);
-        self.out.update(format!("Got a request: {:?}", request));
+        self.data.update(format!("Got a request: {:?}", request));
+        self.data.count();
 
         let reply = HelloReply {
             message: format!("Hello {}!", request.into_inner().name),
         };
 
-        Ok(Response::new(reply)) 
+        Ok(Response::new(reply))
     }
 }
 
@@ -86,11 +130,11 @@ fn intercept(req: Request<()>) -> Result<Request<()>, Status> {
 }
 
 #[tokio::main]
-async fn server(out1: Output) -> Result<(), Box<dyn std::error::Error>> {
+async fn server(out1: TextBuffer, ff1: Counter) -> Result<(), Box<dyn std::error::Error>> {
     let addr = "[::1]:50051".parse()?;
     let mut greeter = MyGreeter::default();
 
-    greeter.out = Outputer::new(out1);
+    greeter.data = SharedData::new(out1, ff1);
 
     let svc = GreeterServer::with_interceptor(greeter, intercept);
 
@@ -102,7 +146,24 @@ async fn server(out1: Output) -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-fn draw_gallery() -> Output {
+#[tokio::main]
+async fn req_client() -> Result<(), Box<dyn std::error::Error>> {
+    let mut client = GreeterClient::connect("http://[::1]:50051").await?;
+
+    let request = tonic::Request::new(HelloRequest {
+        name: "Tonic23123123".into(),
+    });
+
+    println!("request={:?}", request);
+
+    let response = client.say_hello(request).await?;
+
+    println!("RESPONSE={:?}", response);
+
+    Ok(())
+}
+
+fn draw_gallery() -> (TextBuffer, Frame, Counter) {
     let mut tab = Tabs::default_fill();
 
     let mut grp1 = Flex::default_fill().with_label("Client\t\t").row();
@@ -120,31 +181,52 @@ fn draw_gallery() -> Output {
     // let mut chce = Choice::default();
     // chce.add_choice("Hello");
     // let _inp = Input::default();
-    let mut count = frame::Frame::default()
-        .with_label("0")
-        .with_align(Align::Top | Align::Inside);
 
-    count.set_label_size(36);
-    count.set_label_color(GRAY);
 
     let mut _but6 = ReturnButton::default().with_label("Return");
     col.end();
     grp1.end();
 
     let mut grp2 = Flex::default_fill().with_label("Server\t\t").row();
+
+    let mut col2 = Flex::default().column();
+    grp2.fixed(&col2, 40);
+    col2.set_pad(10);
+    col2.set_margin(10);
+
+    let counter = Counter::new(0);
+
+    let mut count = frame::Frame::default()
+    .with_label(&counter.value().to_string())
+    .with_align(Align::RightTop);
+
+    col2.end();
+
     let mut col2 = Flex::default().column();
     grp2.fixed(&col2, 400);
     col2.set_pad(10);
     col2.set_margin(10);
 
-    let out = Output::default();
+    count.set_label_size(36);
+    count.set_label_color(GRAY);
 
-   
-    // out1.set(out);
+
+
+    let mut disp = TextDisplay::new(5, 5, 390, 250, None);
+
+    let mut buf = TextBuffer::default();
+    buf.append("Initiating app\n");
+    disp.set_buffer(buf.clone());
+
+    // let out: Output = Output::default();
+    
 
     _but6.set_callback(move |_| {
-        let label = (count.label().parse::<i32>().unwrap() + 1).to_string();
-        count.set_label(&label);
+
+        let _ = thread::spawn(|| {
+            let _= req_client();
+        });
+       
     });
 
     col2.end();
@@ -152,7 +234,7 @@ fn draw_gallery() -> Output {
     tab.end();
     tab.auto_layout();
 
-    return out;
+    (buf, count, counter)
 }
 
 fn main() {
@@ -165,10 +247,19 @@ fn main() {
         .with_label("fltk grps rust")
         .center_screen();
 
-    let oo4 = draw_gallery();
+    let (oo4, mut fr5, cn6) = draw_gallery();
+
+    fr5.handle(move |f, ev| {
+        if ev == MyEvent::CHANGED.into() {
+            f.set_label(&cn6.clone().value().to_string());
+            true
+        } else {
+            false
+        }
+    });
 
     thread::spawn(move || {
-        let _ = server(oo4);
+        let _ = server(oo4, cn6);
     });
 
 

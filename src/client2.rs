@@ -81,28 +81,6 @@ impl Greeter for MyGreeter {
     }
 }
 
-fn intercept(req: Request<()>) -> Result<Request<()>, Status> {
-    println!("Intercepting request: {:?}", req);
-    Ok(req)
-}
-
-#[tokio::main]
-async fn server(out1: TextBuffer, ff1: Frame) -> Result<(), Box<dyn std::error::Error>> {
-    let addr = "[::1]:50051".parse()?;
-    let mut greeter = MyGreeter::default();
-
-    greeter.data = SharedData::new(out1, ff1);
-
-    let svc = GreeterServer::with_interceptor(greeter, intercept);
-
-    Server::builder()
-        .add_service(svc)
-        .serve(addr)
-        .await?;
-
-    Ok(())
-}
-
 #[tokio::main]
 async fn req_client(ss2: Arc<Input>) -> Result<(), Box<dyn std::error::Error>> {
     let mut client = GreeterClient::connect("http://[::1]:50051").await?;
@@ -120,7 +98,7 @@ async fn req_client(ss2: Arc<Input>) -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-fn draw_gallery() -> (TextBuffer, Frame) {
+fn draw_gallery()  {
     let mut tab = Tabs::default_fill();
 
     let mut grp1 = Flex::default_fill().with_label("Client\t\t").row();
@@ -144,6 +122,7 @@ fn draw_gallery() -> (TextBuffer, Frame) {
 
 
     let mut _but6 = ReturnButton::default().with_label("Return");
+
     col.end();
 
 
@@ -155,41 +134,7 @@ fn draw_gallery() -> (TextBuffer, Frame) {
     let mut inp = Input::default();
     inp.set_value("rust");
 
-    col.end();
-    grp1.end();
-
-    
-
-    let mut grp2 = Flex::default_fill().with_label("Server\t\t").row();
-
-    let mut col2 = Flex::default().column();
-    grp2.fixed(&col2, 70);
-    col2.set_pad(10);
-    col2.set_margin(10);
-
-    let mut count = frame::Frame::default()
-    .with_label("0")
-    .with_align(Align::Center);
-
-    col2.end();
-
-    let mut col2 = Flex::default().column();
-    grp2.fixed(&col2, 400);
-    col2.set_pad(50);
-    col2.set_margin(10);
-
-    count.set_label_size(36);
-    count.set_label_color(GRAY);
-
-    let mut disp = TextDisplay::new(5, 5, 390, 250, None);
-
-    let mut buf = TextBuffer::default();
-    buf.append("Initiating app\n");
-    disp.set_buffer(buf.clone());
-
     let wrapped_inp = Arc::new(inp);
-
-
     _but6.set_callback(move |_| {
         let inp = wrapped_inp.clone();
         
@@ -199,12 +144,13 @@ fn draw_gallery() -> (TextBuffer, Frame) {
        
     });
 
-    col2.end();
-    grp2.end();
+    col.end();
+    grp1.end();
+
+    
     tab.end();
     tab.auto_layout();
 
-    (buf, count)
 }
 
 fn main() {
@@ -217,11 +163,7 @@ fn main() {
         .with_label("fltk grps rust")
         .center_screen();
 
-    let (oo4, fr5) = draw_gallery();
-
-    thread::spawn(move || {
-        let _ = server(oo4, fr5);
-    });
+    draw_gallery();
 
 
 

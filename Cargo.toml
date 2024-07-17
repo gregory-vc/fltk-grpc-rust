@@ -11,6 +11,10 @@ path = "src/server.rs"
 name = "helloworld-client"
 path = "src/client.rs"
 
+[[bin]] # Bin to run the HelloWorld gRPC client
+name = "client2"
+path = "src/client2.rs"
+
 [dependencies]
 fltk = "^1.4"
 tonic = "0.12"

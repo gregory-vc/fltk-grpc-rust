@@ -3,23 +3,29 @@ name = "hello2"
 version = "0.1.0"
 edition = "2021"
 
-[[bin]] # Bin to run the HelloWorld gRPC server
+[[bin]]
 name = "helloworld-server"
 path = "src/server.rs"
 
-[[bin]] # Bin to run the HelloWorld gRPC client
+[[bin]]
 name = "helloworld-client"
 path = "src/client.rs"
 
-[[bin]] # Bin to run the HelloWorld gRPC client
+[[bin]]
 name = "client2"
 path = "src/client2.rs"
+
+[[bin]]
+name = "main2"
+path = "src/main2.rs"
 
 [dependencies]
 fltk = "^1.4"
 tonic = "0.12"
 prost = "0.13"
+prost-types = "0.13"
 tokio = { version = "1.0", features = ["macros", "rt-multi-thread"] }
+image = "0.25.1"
 
 [build-dependencies]
 tonic-build = "0.12"

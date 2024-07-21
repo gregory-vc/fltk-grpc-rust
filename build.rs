@@ -1,16 +1,3 @@
-// fn main() -> Result<(), Box<dyn std::error::Error>> {
-
-//     prost_reflect_build::Builder::new()
-//     .compile_protos(&["src/proto/solar-system-info.proto"], &["src/proto"])
-//     .unwrap();
-
-//     tonic_build::compile_protos("src/proto/hello.proto")?;
-//     tonic_build::compile_protos("src/proto/solar-system-info.proto")?;
-
-
-//     Ok(())
-// }
-
 use std::io::Result;
 
 fn main() -> Result<()> {

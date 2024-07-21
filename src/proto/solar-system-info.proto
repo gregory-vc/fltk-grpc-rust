@@ -5,23 +5,42 @@ package solar_system_info;
 import "google/protobuf/timestamp.proto";
 
 message Planet {
-    uint64 id = 1;
-    string name = 2;
-    Type type = 3;
-    float meanRadius = 4;
-    float mass = 5;
-    repeated Satellite satellites = 6;
-  }
+  uint64 id = 1;
+  string name = 2;
+  Type type = 3;
+  float meanRadius = 4;
+  float mass = 5;
+  repeated Satellite satellites = 6;
+}
   
-  enum Type {
-    TERRESTRIAL_PLANET = 0;
-    GAS_GIANT = 1;
-    ICE_GIANT = 2;
-    DWARF_PLANET = 3;
-  }
+enum Type {
+  TERRESTRIAL_PLANET = 0;
+  GAS_GIANT = 1;
+  ICE_GIANT = 2;
+  DWARF_PLANET = 3;
+}
   
-  message Satellite {
-    uint64 id = 1;
-    string name = 2;
-    google.protobuf.Timestamp first_spacecraft_landing_date = 3;
-  }
+message Satellite {
+  uint64 id = 1;
+  string name = 2;
+  google.protobuf.Timestamp first_spacecraft_landing_date = 3;
+}
+
+message Star {
+  uint64 id = 1;
+  string name = 2;
+  Class class = 3;
+  float meanRadius = 4;
+  float mass = 5;
+  repeated Planet planets = 6;
+}
+
+enum Class {
+  CLASS_O = 0;
+  CLASS_B = 1;
+  CLASS_A = 2;
+  CLASS_F = 3;
+  CLASS_G = 4;
+  CLASS_K = 5;
+  CLASS_M = 6;
+}

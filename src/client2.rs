@@ -1,27 +1,20 @@
 use fltk::{
-    app, button::*, enums::{Align, Color, Font, FrameType}, frame::{self, Frame}, group::{Flex, Tabs}, text::{TextBuffer, TextDisplay},
-     input::Input, menu::{Choice, MenuButton}, output::Output, prelude::{GroupExt, InputExt, MenuExt, WidgetBase, WidgetExt, WindowExt}, window::Window,
-
-     button::Button,
-     prelude::*,
+    app, button::*, frame::Frame, group::{Flex, Tabs}, text::TextBuffer,
+     input::Input, menu::Choice, prelude::{GroupExt, InputExt, MenuExt, WidgetBase, WidgetExt, WindowExt}, window::Window,
 
 };
-
-use tonic::{transport::Server, Request, Response, Status};
-
-use hello_world::greeter_server::{Greeter, GreeterServer};
+use tonic::{ Request, Response, Status};
+use hello_world::greeter_server::Greeter;
 use hello_world::{HelloReply, HelloRequest};
-
 use std::thread;
-use std::time::Duration;
 use std::sync::{Arc, Mutex};
 use hello_world::greeter_client::GreeterClient;
+use once_cell::sync::Lazy;
+use prost_reflect::DescriptorPool;
 
 pub mod hello_world {
     tonic::include_proto!("helloworld");
 }
-
-const GRAY: Color = Color::from_hex(0x757575);
 
 #[derive(Clone, Debug, Default)]
 pub struct SharedData {
@@ -33,6 +26,13 @@ struct Shared {
     out: Mutex<TextBuffer>,
     frame: Mutex<Frame>
 }
+
+pub static DESCRIPTOR_POOL: Lazy<DescriptorPool> = Lazy::new(|| {
+    DescriptorPool::decode(
+        include_bytes!(concat!(env!("OUT_DIR"), "/file_descriptor_set.bin")).as_ref(),
+    )
+    .unwrap()
+});
 
 
 impl SharedData {
@@ -106,26 +106,15 @@ fn draw_gallery()  {
     grp1.fixed(&col, 160);
     col.set_pad(10);
     col.set_margin(10);
-    // let _but1 = Button::default().with_label("Button");
-    // let _but2 = RoundButton::default().with_label("Round");
-    // let _but3 = CheckButton::default().with_label("Check");
-    
-    // let mut but5 = MenuButton::default().with_label("Type");
-    // but5.add_choice("Text|Bool|Enum");
-   
+
     let mut chce = Choice::default();
     chce.add_choice("Text");
     chce.add_choice("Bool");
     chce.add_choice("Enum");
 
-    // let _inp = Input::default();
-
-
     let mut _but6 = ReturnButton::default().with_label("Return");
 
     col.end();
-
-
     let mut col = Flex::default().column();
     grp1.fixed(&col, 400);
     col.set_pad(10);

@@ -1,5 +1,3 @@
-use prost_reflect::FieldDescriptor;
-use prost_reflect::Value;
 use solar_system_info::Class;
 use solar_system_info::Planet;
 use solar_system_info::Star;
@@ -9,10 +7,13 @@ use prost_types::Timestamp;
 use std::time::SystemTime;
 use once_cell::sync::Lazy;
 use prost_reflect::DescriptorPool;
-use prost_reflect::ReflectMessage;
-use anyhow::Result;
+use gui_reflect;
 
-pub mod format;
+use fltk::{
+    app,  window::Window,
+     prelude::*,
+};
+
 
 pub mod solar_system_info {
     tonic::include_proto!("solar_system_info");
@@ -24,41 +25,6 @@ pub static DESCRIPTOR_POOL: Lazy<DescriptorPool> = Lazy::new(|| {
     )
     .unwrap()
 });
-
-fn print_message(del: &String, k: FieldDescriptor, v: &Value) {
-    let next_del = del.to_owned()+">";
-    if !k.is_list() {
-        println!("{} {}, {}, {:?}", del, k.full_name(), v, k.kind());
-    } else {
-        println!("{} {}, {}, {:?}", next_del, k.full_name(), v, k.kind());
-
-        if let Some(v11) = v.as_list() {
-            for k11 in v11.iter() {
-                if let Some(k12) = k11.as_message() {
-                    for (k13, v13) in k12.fields() {
-                        print_message(&next_del, k13, v13);
-                    }
-                }else {
-                    println!("------>> empty");
-                }
-            }
-        } else {
-            println!("------>> empty as_list");
-        }
-    }
-}
-
-fn print_proto(event: impl ReflectMessage) -> Result<()> {
-    let message: prost_reflect::DynamicMessage = format::proto2dynamic(event)?;
-
-    println!("start__--------------------------------------------------->");
-
-    for (k, v) in message.fields() {
-        print_message(&">".to_string(), k, v);
-    }
-
-    Ok(())
-}
 
 fn main() {
 
@@ -112,9 +78,22 @@ fn main() {
         planets: vec![p1, p2]
     };
     
-    _ = print_proto(p1_test);
-    _ = print_proto(p2_test);
-    _ = print_proto(s2_test);
-    _ = print_proto(s1);
+    _ = gui_reflect::print::print_proto(p1_test);
+    _ = gui_reflect::print::print_proto(p2_test);
+    _ = gui_reflect::print::print_proto(s2_test);
+    _ = gui_reflect::print::print_proto(s1);
 
+    let app = app::App::default().with_scheme(app::Scheme::Gtk);
+    app::background(221, 221, 221);
+
+    let mut wind = Window::default()
+        .with_size(700, 450)
+        .with_label("fltk grps rust")
+        .center_screen();
+
+    wind.make_resizable(true);
+    wind.end();
+    wind.show();
+
+    app.run().unwrap();
 }

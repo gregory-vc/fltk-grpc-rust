@@ -1,6 +1,7 @@
 use enums::Color;
 use group::Flex;
 use prost_reflect::DynamicMessage;
+use prost_reflect::Kind;
 use prost_reflect::ReflectMessage;
 use prost_reflect::FieldDescriptor;
 use prost_reflect::Value;
@@ -25,6 +26,38 @@ impl MyFrame {
     }
 }
 
+struct MyInput {
+}
+
+impl MyInput {
+    pub fn new(v: &Value, k: String) -> MyInput {
+        match k.as_str() {
+            "string" => {
+                let mut ipt = input::Input::default();
+                if let Some(vl) = v.as_str() {
+                    ipt.set_value(vl);
+                }
+            }
+
+            "uint64" => {
+                let mut ipt = input::FloatInput::default();
+                if let Some(vl) = v.as_u64() {
+                    ipt.set_value(vl.to_string().as_str());
+                }
+            }
+
+            "float" => {
+                let mut ipt = input::FloatInput::default();
+                if let Some(vl) = v.as_f32() {
+                    ipt.set_value(vl.to_string().as_str());
+                }
+            }
+            _ => println!("something else!"),
+        }
+
+        Self {  }
+    }
+}
 
 fn proto2dynamic(proto: impl ReflectMessage) -> Result<DynamicMessage> {
     Ok(DynamicMessage::decode(
@@ -35,11 +68,8 @@ fn proto2dynamic(proto: impl ReflectMessage) -> Result<DynamicMessage> {
 
 pub fn draw_proto(event: impl ReflectMessage) -> Result<()> {
     let message: prost_reflect::DynamicMessage = proto2dynamic(event)?;
-
-    println!("start__--------------------------------------------------->");
-
     let mut col = group::Flex::default_fill().column();
-    col.set_margin(20);
+    col.set_margin(10);
 
     for (k, v) in message.fields() {
 
@@ -50,22 +80,36 @@ pub fn draw_proto(event: impl ReflectMessage) -> Result<()> {
     }
 
     col.end();
-    col.set_pad(30);
+    col.set_pad(10);
 
     Ok(())
 }
 
 fn draw(del: &String, k: FieldDescriptor, v: &Value) {
-    // let mut row = group::Flex::default();
+    let mut row = group::Flex::default();
     // col.fixed(&row, 75);
 
     let next_del = del.to_owned()+">";
     if !k.is_list() {
         let name = del.to_owned() + k.full_name();
         let _ = MyFrame::new(&name, enums::Color::Light3);
+
+        let nn = format!("{:?}", k.kind());
+        let _ = MyFrame::new(&nn, enums::Color::Light3);
+
+        let _ = MyInput::new(v, nn);
+
+        row.end();
+        row.set_pad(10);
     } else {
         let name = next_del.to_owned() + k.full_name();
         let _ = MyFrame::new(&name, enums::Color::Inactive);
+
+        let nn = format!("{:?}", k.kind());
+        let _ = MyFrame::new(&nn, enums::Color::Inactive);
+
+        row.end();
+        row.set_pad(10);
 
         if let Some(v11) = v.as_list() {
             for k11 in v11.iter() {
@@ -76,17 +120,12 @@ fn draw(del: &String, k: FieldDescriptor, v: &Value) {
 
                         draw(&next_del, k13, v13);
                     }
-                }else {
-                    println!("------>> empty");
                 }
             }
-        } else {
-            println!("------>> empty as_list");
         }
     }
 
-    // row.end();
-    // row.set_pad(10);
+
 
     // col.end();
     // col.set_pad(30);

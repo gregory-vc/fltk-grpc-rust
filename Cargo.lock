@@ -417,6 +417,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "flex_test"
+version = "0.1.0"
+dependencies = [
+ "fltk",
+]
+
+[[package]]
 name = "fltk"
 version = "1.4.32"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -585,6 +592,7 @@ name = "hello2"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "flex_test",
  "fltk",
  "gui_reflect",
  "image",

@@ -34,6 +34,7 @@ once_cell = "1.19.0"
 serde_json = "1.0.120"
 anyhow = "1.0.86"
 gui_reflect = {path ="gui_reflect"}
+flex_test = {path ="flex_test"}
 
 [build-dependencies]
 tonic-build = "0.12"

@@ -2,6 +2,7 @@ extern crate chrono;
 
 use chrono::prelude::*;
 
+use enums::Align;
 use enums::Color;
 use prost_reflect::DynamicMessage;
 use prost_reflect::ReflectMessage;
@@ -25,6 +26,8 @@ impl MyFrame {
         f.set_color(cl);
         f.set_label(f_name);
         f.set_label_size(12);
+        f.set_align(Align::Center);
+    
         Self { f }
     }
 }
@@ -69,11 +72,6 @@ impl MyInput {
                     }
                 }
 
-                if let Some(vl) = v.as_f64() {
-                    let s1 = vl.to_string();
-                    ipt.set_value(s1.as_str());
-                }
-                
                 let mut but = button::Button::new(160, 200, 80, 40, "change");
                 but.set_callback(move |_| {
                     let cal = calendar::Calendar::default();

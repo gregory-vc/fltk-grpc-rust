@@ -11,13 +11,9 @@ use gui_reflect;
 
 use fltk::{
     app,
-    button::*,
     window::Window,
     group::{Flex, Tabs},
-    input::Input,
-    menu::{Choice, MenuButton},
-    output::Output,
-    prelude::{GroupExt, InputExt, MenuExt, WidgetBase, WidgetExt, WindowExt},
+    prelude::{GroupExt, WidgetBase, WidgetExt, WindowExt},
 };
 
 

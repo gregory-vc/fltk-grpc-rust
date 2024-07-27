@@ -1,12 +1,15 @@
+extern crate chrono;
+
+use chrono::prelude::*;
+
 use enums::Color;
-use group::Flex;
 use prost_reflect::DynamicMessage;
-use prost_reflect::Kind;
 use prost_reflect::ReflectMessage;
 use prost_reflect::FieldDescriptor;
 use prost_reflect::Value;
 use anyhow::Result;
 use fltk::{prelude::*, *};
+use fltk_calendar::calendar;
 
 struct MyFrame {
     #[allow(dead_code)]
@@ -52,6 +55,36 @@ impl MyInput {
                     ipt.set_value(vl.to_string().as_str());
                 }
             }
+
+            "google.protobuf.Timestamp" => {
+                let mut ipt = input::Input::default();
+                
+                if let Some(k55) = v.as_message() {
+                    if let Some(s55) = k55.get_field_by_name("seconds").as_ref() {
+                        if let Some(vl) = s55.as_i64() {
+                            if let Some(dt56) = DateTime::from_timestamp(vl, 0) {
+                                ipt.set_value(dt56.format("%Y-%m-%d").to_string().as_str());
+                            }
+                        }
+                    }
+                }
+
+                if let Some(vl) = v.as_f64() {
+                    let s1 = vl.to_string();
+                    ipt.set_value(s1.as_str());
+                }
+                
+                let mut but = button::Button::new(160, 200, 80, 40, "change");
+                but.set_callback(move |_| {
+                    let cal = calendar::Calendar::default();
+                    let date = cal.get_date();
+                    println!("{:?}", date);
+                    if let Some(date) = date {
+                        println!("{:?}", date.to_string());
+                        ipt.set_value(date.to_string().as_str());
+                    }
+                });
+            }
             _ => println!("something else!"),
         }
 
@@ -72,11 +105,7 @@ pub fn draw_proto(event: impl ReflectMessage) -> Result<()> {
     col.set_margin(10);
 
     for (k, v) in message.fields() {
-
-
         draw(&">".to_string(), k, v);
-
-
     }
 
     col.end();
@@ -87,7 +116,6 @@ pub fn draw_proto(event: impl ReflectMessage) -> Result<()> {
 
 fn draw(del: &String, k: FieldDescriptor, v: &Value) {
     let mut row = group::Flex::default();
-    // col.fixed(&row, 75);
 
     let next_del = del.to_owned()+">";
     if !k.is_list() {
@@ -115,19 +143,10 @@ fn draw(del: &String, k: FieldDescriptor, v: &Value) {
             for k11 in v11.iter() {
                 if let Some(k12) = k11.as_message() {
                     for (k13, v13) in k12.fields() {
-                        // let mut col = group::Flex::default_fill().column();
-                        // col.set_margin(20);
-
                         draw(&next_del, k13, v13);
                     }
                 }
             }
         }
     }
-
-
-
-    // col.end();
-    // col.set_pad(30);
-
 }

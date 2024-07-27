@@ -525,6 +525,7 @@ name = "gui_reflect"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "fltk",
  "prost",
  "prost-reflect",
  "prost-reflect-build",

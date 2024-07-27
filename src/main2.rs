@@ -10,8 +10,14 @@ use prost_reflect::DescriptorPool;
 use gui_reflect;
 
 use fltk::{
-    app,  window::Window,
-     prelude::*,
+    app,
+    button::*,
+    window::Window,
+    group::{Flex, Tabs},
+    input::Input,
+    menu::{Choice, MenuButton},
+    output::Output,
+    prelude::{GroupExt, InputExt, MenuExt, WidgetBase, WidgetExt, WindowExt},
 };
 
 
@@ -77,6 +83,11 @@ fn main() {
         mean_radius: 777.7777,
         planets: vec![p1, p2]
     };
+
+    let p1_test1 = p1_test.clone();
+    let p2_test1 = p2_test.clone();
+    let s2_test1 = s2_test.clone();
+    let s11 = s1.clone();
     
     _ = gui_reflect::print::print_proto(p1_test);
     _ = gui_reflect::print::print_proto(p2_test);
@@ -90,6 +101,30 @@ fn main() {
         .with_size(700, 450)
         .with_label("fltk grps rust")
         .center_screen();
+
+
+
+    let mut tab = Tabs::default_fill();
+
+    let grp1 = Flex::default_fill().with_label("Planet 1\t\t").row();
+    _ = gui_reflect::draw::draw_proto(p1_test1);
+    grp1.end();
+
+    let grp2 = Flex::default_fill().with_label("Planet 2\t\t").row();
+    _ = gui_reflect::draw::draw_proto(p2_test1);
+    grp2.end();
+
+    let grp2 = Flex::default_fill().with_label("Satellite\t\t").row();
+    _ = gui_reflect::draw::draw_proto(s2_test1);
+    grp2.end();
+
+    let grp2 = Flex::default_fill().with_label("Star\t\t").row();
+    _ = gui_reflect::draw::draw_proto(s11);
+    grp2.end();
+
+    tab.end();
+    tab.auto_layout();
+
 
     wind.make_resizable(true);
     wind.end();

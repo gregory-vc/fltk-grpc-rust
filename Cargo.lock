@@ -580,6 +580,7 @@ dependencies = [
  "chrono",
  "fltk",
  "fltk-calendar",
+ "once_cell",
  "prost",
  "prost-reflect",
  "prost-reflect-build",

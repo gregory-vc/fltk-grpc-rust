@@ -11,6 +11,8 @@ use prost_reflect::Value;
 use anyhow::Result;
 use fltk::{prelude::*, *};
 use fltk_calendar::calendar;
+use once_cell::sync::Lazy;
+use prost_reflect::DescriptorPool;
 
 struct MyFrame {
     #[allow(dead_code)]
@@ -36,7 +38,7 @@ struct MyInput {
 }
 
 impl MyInput {
-    pub fn new(v: &Value, k: String) -> MyInput {
+    pub fn new(v: &Value, k: String, dp: &DescriptorPool) -> MyInput {
         match k.as_str() {
             "string" => {
                 let mut ipt = input::Input::default();
@@ -83,7 +85,13 @@ impl MyInput {
                     }
                 });
             }
-            _ => println!("something else!"),
+            _ => {
+                if let Some(vv1) = v.as_enum_number() {
+                    if let Some(en) = dp.get_enum_by_name(k.as_str()) {
+                        println!("{} {:?}", vv1, en);
+                    }
+                }
+            },
         }
 
         Self {  }
@@ -97,13 +105,13 @@ fn proto2dynamic(proto: impl ReflectMessage) -> Result<DynamicMessage> {
     )?)
 }
 
-pub fn draw_proto(event: impl ReflectMessage) -> Result<()> {
+pub fn draw_proto(event: impl ReflectMessage, dp: &DescriptorPool) -> Result<()> {
     let message: prost_reflect::DynamicMessage = proto2dynamic(event)?;
     let mut col = group::Flex::default_fill().column();
     col.set_margin(10);
 
     for (k, v) in message.fields() {
-        draw(&">".to_string(), k, v);
+        draw(&">".to_string(), k, v, dp);
     }
 
     col.end();
@@ -112,23 +120,24 @@ pub fn draw_proto(event: impl ReflectMessage) -> Result<()> {
     Ok(())
 }
 
-fn draw(del: &String, k: FieldDescriptor, v: &Value) {
+fn draw(del: &String, k: FieldDescriptor, v: &Value, dp: &DescriptorPool) {
     let mut row = group::Flex::default();
 
     let next_del = del.to_owned()+">";
     if !k.is_list() {
-        let name = del.to_owned() + k.full_name();
+
+        let name = k.full_name();
         let _ = MyFrame::new(&name, enums::Color::Light3);
 
         let nn = format!("{:?}", k.kind());
         let _ = MyFrame::new(&nn, enums::Color::Light3);
 
-        let _ = MyInput::new(v, nn);
+        let _ = MyInput::new(v, nn, dp);
 
         row.end();
         row.set_pad(10);
     } else {
-        let name = next_del.to_owned() + k.full_name();
+        let name = k.full_name();
         let _ = MyFrame::new(&name, enums::Color::Inactive);
 
         let nn = format!("{:?}", k.kind());
@@ -141,7 +150,7 @@ fn draw(del: &String, k: FieldDescriptor, v: &Value) {
             for k11 in v11.iter() {
                 if let Some(k12) = k11.as_message() {
                     for (k13, v13) in k12.fields() {
-                        draw(&next_del, k13, v13);
+                        draw(&next_del, k13, v13, dp);
                     }
                 }
             }

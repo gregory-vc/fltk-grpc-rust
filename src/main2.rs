@@ -103,19 +103,19 @@ fn main() {
     let mut tab = Tabs::default_fill();
 
     let grp1 = Flex::default_fill().with_label("Planet 1\t\t").row();
-    _ = gui_reflect::draw::draw_proto(p1_test1);
+    _ = gui_reflect::draw::draw_proto(p1_test1, &DESCRIPTOR_POOL);
     grp1.end();
 
     let grp2 = Flex::default_fill().with_label("Planet 2\t\t").row();
-    _ = gui_reflect::draw::draw_proto(p2_test1);
+    _ = gui_reflect::draw::draw_proto(p2_test1, &DESCRIPTOR_POOL);
     grp2.end();
 
     let grp2 = Flex::default_fill().with_label("Satellite\t\t").row();
-    _ = gui_reflect::draw::draw_proto(s2_test1);
+    _ = gui_reflect::draw::draw_proto(s2_test1, &DESCRIPTOR_POOL);
     grp2.end();
 
     let grp2 = Flex::default_fill().with_label("Star\t\t").row();
-    _ = gui_reflect::draw::draw_proto(s11);
+    _ = gui_reflect::draw::draw_proto(s11, &DESCRIPTOR_POOL);
     grp2.end();
 
     tab.end();

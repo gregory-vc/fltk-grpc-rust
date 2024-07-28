@@ -117,7 +117,6 @@ pub fn draw_proto(event: impl ReflectMessage, dp: &DescriptorPool) -> Result<()>
     let message: prost_reflect::DynamicMessage = proto2dynamic(event)?;
     let mut col = group::Flex::default_fill().column();
     col.set_margin(10);
-    // let mut row_vec: Vec<group::Flex> = Vec::new();
 
     for (k, v) in message.fields() {
         draw(10, k, v, dp);

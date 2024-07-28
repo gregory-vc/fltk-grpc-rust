@@ -1,5 +1,6 @@
 extern crate chrono;
 
+use anyhow::Ok;
 use chrono::prelude::*;
 use enums::Align;
 use enums::CallbackTrigger;
@@ -116,21 +117,21 @@ pub fn draw_proto(event: impl ReflectMessage, dp: &DescriptorPool) -> Result<()>
     let message: prost_reflect::DynamicMessage = proto2dynamic(event)?;
     let mut col = group::Flex::default_fill().column();
     col.set_margin(10);
-    let mut row_vec: Vec<group::Flex> = Vec::new();
+    // let mut row_vec: Vec<group::Flex> = Vec::new();
 
     for (k, v) in message.fields() {
-        draw(&">".to_string(), k, v, dp, &mut row_vec);
+        draw(10, k, v, dp);
     }
 
     col.end();
     col.set_pad(10);
 
-    Ok(())
+    std::result::Result::Ok(())
 }
 
-fn draw(del: &String, k: FieldDescriptor, v: &Value, dp: &DescriptorPool, new_row_vec: &mut Vec<group::Flex>) {
-    let mut row: group::Flex = group::Flex::default();
-    let next_del = del.to_owned()+">";
+fn draw(pad: i32, k: FieldDescriptor, v: &Value, dp: &DescriptorPool) -> group::Flex {
+    let mut row: group::Flex = group::Flex::default().row();
+    let next_pad = pad + 40;
 
     if !k.is_list() {
         let name = k.full_name();
@@ -140,8 +141,7 @@ fn draw(del: &String, k: FieldDescriptor, v: &Value, dp: &DescriptorPool, new_ro
         let _ = MyInput::new(v, nn, dp);
 
         row.end();
-        row.set_pad(10);
-        new_row_vec.push(row);
+        row.set_margins(pad, 0, 0, 0);
     } else {
         let name = k.full_name();
         let _ = MyFrame::new(&name, enums::Color::Inactive);
@@ -150,12 +150,24 @@ fn draw(del: &String, k: FieldDescriptor, v: &Value, dp: &DescriptorPool, new_ro
         let mut but = button::Button::new(160, 200, 80, 40, "+");
         let mut row_vec: Vec<group::Flex> = Vec::new();
 
+        row.end();
+        row.set_margins(pad, 0, 0, 0);
 
-        let b_new_row_vec = new_row_vec.clone();
+
+        if let Some(v11) = v.as_list() {
+            for k11 in v11.iter() {
+                if let Some(k12) = k11.as_message() {
+                    for (k13, v13) in k12.fields() {
+                        let new_row = draw(next_pad, k13, v13, dp);
+                        row_vec.push(new_row);
+                    }
+                }
+            }
+        }
+
+        let b_new_row_vec = row_vec.clone();
         let mut is_enable = false;
 
-        row.end();
-        row.set_pad(10);
         but.set_callback(move |_| {
 
             if !is_enable {
@@ -173,21 +185,8 @@ fn draw(del: &String, k: FieldDescriptor, v: &Value, dp: &DescriptorPool, new_ro
             }
 
             println!("{:?}", b_new_row_vec);
-
-            // let  group1: group::Group =  app::widget_from_id("test").unwrap();
-            // println!("{:?}", group1);
-            // group1.deactivate();
-            // group1.hide();
         });
-
-        if let Some(v11) = v.as_list() {
-            for k11 in v11.iter() {
-                if let Some(k12) = k11.as_message() {
-                    for (k13, v13) in k12.fields() {
-                        draw(&next_del, k13, v13, dp, &mut row_vec);
-                    }
-                }
-            }
-        }
     }
+
+    return row;
 }

@@ -3,6 +3,7 @@ extern crate chrono;
 use chrono::prelude::*;
 
 use enums::Align;
+use enums::CallbackTrigger;
 use enums::Color;
 use prost_reflect::DynamicMessage;
 use prost_reflect::ReflectMessage;
@@ -62,7 +63,7 @@ impl MyInput {
             }
 
             "google.protobuf.Timestamp" => {
-                let mut ipt = input::Input::default();
+                let mut ipt: input::Input = input::Input::default();
                 
                 if let Some(k55) = v.as_message() {
                     if let Some(s55) = k55.get_field_by_name("seconds").as_ref() {
@@ -74,16 +75,30 @@ impl MyInput {
                     }
                 }
 
-                let mut but = button::Button::new(160, 200, 80, 40, "change");
-                but.set_callback(move |_| {
+                ipt.set_trigger(CallbackTrigger::EnterKeyAlways);
+
+                let mut ipt2 = ipt.clone();
+
+                ipt.set_callback(move |_| {
                     let cal = calendar::Calendar::default();
                     let date = cal.get_date();
                     println!("{:?}", date);
                     if let Some(date) = date {
                         println!("{:?}", date.to_string());
-                        ipt.set_value(date.to_string().as_str());
+                        ipt2.set_value(date.to_string().as_str());
                     }
                 });
+
+                // let mut but = button::Button::new(160, 200, 80, 40, "change");
+                // but.set_callback(move |_| {
+                //     let cal = calendar::Calendar::default();
+                //     let date = cal.get_date();
+                //     println!("{:?}", date);
+                //     if let Some(date) = date {
+                //         println!("{:?}", date.to_string());
+                //         ipt.set_value(date.to_string().as_str());
+                //     }
+                // });
             }
             _ => {
                 if let Some(vv1) = v.as_enum_number() {

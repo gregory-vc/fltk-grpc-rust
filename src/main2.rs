@@ -90,7 +90,7 @@ fn main() {
     _ = gui_reflect::print::print_proto(s2_test);
     _ = gui_reflect::print::print_proto(s1);
 
-    let app = app::App::default().with_scheme(app::Scheme::Gtk);
+    let app: app::App = app::App::default().with_scheme(app::Scheme::Gtk);
     app::background(221, 221, 221);
 
     let mut wind = Window::default()

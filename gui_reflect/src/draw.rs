@@ -1,7 +1,6 @@
 extern crate chrono;
 
 use chrono::prelude::*;
-
 use enums::Align;
 use enums::CallbackTrigger;
 use enums::Color;
@@ -23,8 +22,6 @@ struct MyFrame {
 impl MyFrame {
     pub fn new(f_name: &str, cl: Color) -> MyFrame {
         let mut f = frame::Frame::default();
-        // Normally you would use the FrameType enum, for example:
-        // some_widget.set_frame(FrameType::DownBox);
         f.set_frame(enums::FrameType::by_index(1));
         f.set_color(cl);
         f.set_label(f_name);
@@ -82,23 +79,11 @@ impl MyInput {
                 ipt.set_callback(move |_| {
                     let cal = calendar::Calendar::default();
                     let date = cal.get_date();
-                    println!("{:?}", date);
                     if let Some(date) = date {
                         println!("{:?}", date.to_string());
                         ipt2.set_value(date.to_string().as_str());
                     }
                 });
-
-                // let mut but = button::Button::new(160, 200, 80, 40, "change");
-                // but.set_callback(move |_| {
-                //     let cal = calendar::Calendar::default();
-                //     let date = cal.get_date();
-                //     println!("{:?}", date);
-                //     if let Some(date) = date {
-                //         println!("{:?}", date.to_string());
-                //         ipt.set_value(date.to_string().as_str());
-                //     }
-                // });
             }
             _ => {
                 if let Some(vv1) = v.as_enum_number() {
@@ -131,9 +116,10 @@ pub fn draw_proto(event: impl ReflectMessage, dp: &DescriptorPool) -> Result<()>
     let message: prost_reflect::DynamicMessage = proto2dynamic(event)?;
     let mut col = group::Flex::default_fill().column();
     col.set_margin(10);
+    let mut row_vec: Vec<group::Flex> = Vec::new();
 
     for (k, v) in message.fields() {
-        draw(&">".to_string(), k, v, dp);
+        draw(&">".to_string(), k, v, dp, &mut row_vec);
     }
 
     col.end();
@@ -142,37 +128,63 @@ pub fn draw_proto(event: impl ReflectMessage, dp: &DescriptorPool) -> Result<()>
     Ok(())
 }
 
-fn draw(del: &String, k: FieldDescriptor, v: &Value, dp: &DescriptorPool) {
-    let mut row = group::Flex::default();
-
+fn draw(del: &String, k: FieldDescriptor, v: &Value, dp: &DescriptorPool, new_row_vec: &mut Vec<group::Flex>) {
+    let mut row: group::Flex = group::Flex::default();
     let next_del = del.to_owned()+">";
-    if !k.is_list() {
 
+    if !k.is_list() {
         let name = k.full_name();
         let _ = MyFrame::new(&name, enums::Color::Light3);
-
         let nn = format!("{:?}", k.kind());
         let _ = MyFrame::new(&nn, enums::Color::Light3);
-
         let _ = MyInput::new(v, nn, dp);
 
         row.end();
         row.set_pad(10);
+        new_row_vec.push(row);
     } else {
         let name = k.full_name();
         let _ = MyFrame::new(&name, enums::Color::Inactive);
-
         let nn = format!("{:?}", k.kind());
         let _ = MyFrame::new(&nn, enums::Color::Inactive);
+        let mut but = button::Button::new(160, 200, 80, 40, "+");
+        let mut row_vec: Vec<group::Flex> = Vec::new();
+
+
+        let b_new_row_vec = new_row_vec.clone();
+        let mut is_enable = false;
 
         row.end();
         row.set_pad(10);
+        but.set_callback(move |_| {
+
+            if !is_enable {
+                is_enable = true;
+                for mut l88 in b_new_row_vec.clone() {
+                    l88.deactivate();
+                    l88.hide();
+                }
+            } else {
+                is_enable = false;
+                for mut l88 in b_new_row_vec.clone() {
+                    l88.activate();
+                    l88.show()
+                }
+            }
+
+            println!("{:?}", b_new_row_vec);
+
+            // let  group1: group::Group =  app::widget_from_id("test").unwrap();
+            // println!("{:?}", group1);
+            // group1.deactivate();
+            // group1.hide();
+        });
 
         if let Some(v11) = v.as_list() {
             for k11 in v11.iter() {
                 if let Some(k12) = k11.as_message() {
                     for (k13, v13) in k12.fields() {
-                        draw(&next_del, k13, v13, dp);
+                        draw(&next_del, k13, v13, dp, &mut row_vec);
                     }
                 }
             }

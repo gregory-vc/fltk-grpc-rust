@@ -98,8 +98,6 @@ fn main() {
         .with_label("fltk grps rust")
         .center_screen();
 
-
-
     let mut tab = Tabs::default_fill();
 
     let grp1 = Flex::default_fill().with_label("Planet 1\t\t").row();

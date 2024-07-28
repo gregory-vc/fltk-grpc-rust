@@ -11,8 +11,8 @@ use prost_reflect::Value;
 use anyhow::Result;
 use fltk::{prelude::*, *};
 use fltk_calendar::calendar;
-use once_cell::sync::Lazy;
 use prost_reflect::DescriptorPool;
+use menu::Choice;
 
 struct MyFrame {
     #[allow(dead_code)]
@@ -88,6 +88,13 @@ impl MyInput {
             _ => {
                 if let Some(vv1) = v.as_enum_number() {
                     if let Some(en) = dp.get_enum_by_name(k.as_str()) {
+                        let mut chce = Choice::default();
+                        for v55 in en.values() {
+                            chce.add_choice(v55.name());
+                        }
+
+                        chce.set_value(vv1);
+                        
                         println!("{} {:?}", vv1, en);
                     }
                 }

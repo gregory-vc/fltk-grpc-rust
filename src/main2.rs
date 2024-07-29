@@ -59,7 +59,7 @@ fn main() {
         r#type: Type::DwarfPlanet.into(),
         mean_radius: 123.23,
         mass: 234234.34,
-        satellites: vec![],
+        satellites: vec![s1, s2],
         is_human: false,
     };
 

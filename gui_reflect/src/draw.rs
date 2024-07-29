@@ -62,6 +62,13 @@ impl MyInput {
                 }
             }
 
+            "bool" => {
+                let mut but3 = button::CheckButton::default().with_label("enabled");
+                if let Some(vl) = v.as_bool() {
+                    but3.set_value(vl);
+                }
+            }
+
             "google.protobuf.Timestamp" => {
                 let mut ipt: input::Input = input::Input::default();
                 

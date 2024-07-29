@@ -19,6 +19,10 @@ path = "src/client2.rs"
 name = "main2"
 path = "src/main2.rs"
 
+[[bin]]
+name = "main3"
+path = "src/main3.rs"
+
 [dependencies]
 fltk = "^1.4"
 tonic = "0.12"
@@ -35,6 +39,7 @@ serde_json = "1.0.120"
 anyhow = "1.0.86"
 gui_reflect = {path ="gui_reflect"}
 flex_test = {path ="flex_test"}
+fltk-theme = "=0.1.4"
 
 [build-dependencies]
 tonic-build = "0.12"

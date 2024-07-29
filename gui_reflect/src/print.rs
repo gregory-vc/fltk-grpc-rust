@@ -37,7 +37,7 @@ fn print_message(del: &String, k: FieldDescriptor, v: &Value) {
 pub fn print_proto(event: impl ReflectMessage) -> Result<()> {
     let message: prost_reflect::DynamicMessage = proto2dynamic(event)?;
 
-    println!("start__--------------------------------------------------->");
+    println!("start--------------------------------------------------->");
 
     for (k, v) in message.fields() {
         print_message(&">".to_string(), k, v);

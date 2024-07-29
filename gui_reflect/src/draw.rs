@@ -1,5 +1,7 @@
 extern crate chrono;
 
+use std::borrow::Borrow;
+
 use anyhow::Ok;
 use chrono::prelude::*;
 use enums::Align;
@@ -81,7 +83,6 @@ impl MyInput {
                     let cal = calendar::Calendar::default();
                     let date = cal.get_date();
                     if let Some(date) = date {
-                        println!("{:?}", date.to_string());
                         ipt2.set_value(date.to_string().as_str());
                     }
                 });
@@ -93,10 +94,7 @@ impl MyInput {
                         for v55 in en.values() {
                             chce.add_choice(v55.name());
                         }
-
                         chce.set_value(vv1);
-                        
-                        println!("{} {:?}", vv1, en);
                     }
                 }
             },
@@ -118,8 +116,14 @@ pub fn draw_proto(event: impl ReflectMessage, dp: &DescriptorPool) -> Result<()>
     let mut col = group::Flex::default_fill().column();
     col.set_margin(10);
 
-    for (k, v) in message.fields() {
-        draw(10, k, v, dp);
+
+    for k in dp.all_messages() {
+        if message.descriptor().full_name() == k.full_name() {
+            for k2 in  k.fields() {
+                let v = message.get_field(&k2);
+                draw(10, k2, v.borrow(), dp);
+            }
+        }
     }
 
     col.end();
@@ -128,15 +132,16 @@ pub fn draw_proto(event: impl ReflectMessage, dp: &DescriptorPool) -> Result<()>
     std::result::Result::Ok(())
 }
 
-fn draw(pad: i32, k: FieldDescriptor, v: &Value, dp: &DescriptorPool) -> group::Flex {
+fn draw(pad: i32, k: FieldDescriptor, v: &Value, dp: &DescriptorPool) -> Vec<group::Flex> {
     let mut row: group::Flex = group::Flex::default().row();
     let next_pad = pad + 40;
+    let mut row_vec: Vec<group::Flex> = Vec::new();
 
     if !k.is_list() {
         let name = k.full_name();
-        let _ = MyFrame::new(&name, enums::Color::Light3);
+        let _ = MyFrame::new(&name, enums::Color::DarkMagenta);
         let nn = format!("{:?}", k.kind());
-        let _ = MyFrame::new(&nn, enums::Color::Light3);
+        let _ = MyFrame::new(&nn, enums::Color::DarkMagenta);
         let _ = MyInput::new(v, nn, dp);
 
         row.end();
@@ -146,46 +151,71 @@ fn draw(pad: i32, k: FieldDescriptor, v: &Value, dp: &DescriptorPool) -> group::
         let _ = MyFrame::new(&name, enums::Color::Inactive);
         let nn = format!("{:?}", k.kind());
         let _ = MyFrame::new(&nn, enums::Color::Inactive);
-        let mut but = button::Button::new(160, 200, 80, 40, "+");
-        let mut row_vec: Vec<group::Flex> = Vec::new();
-
-        row.end();
-        row.set_margins(pad, 0, 0, 0);
-
 
         if let Some(v11) = v.as_list() {
-            for k11 in v11.iter() {
-                if let Some(k12) = k11.as_message() {
-                    for (k13, v13) in k12.fields() {
-                        let new_row = draw(next_pad, k13, v13, dp);
-                        row_vec.push(new_row);
+            if v11.len() > 0 {
+                let mut but = button::Button::new(160, 200, 80, 40, ">");
+                row.end();
+                row.set_margins(pad, 0, 0, 0);
+                for k11 in v11.iter() {
+                    if let Some(k12) = k11.as_message() {
+    
+                        for k in dp.all_messages() {
+                            if k12.descriptor().full_name() == k.full_name() {
+                                for k2 in  k.fields() {
+                                    let v = k12.get_field(&k2);
+                                    let new_row = draw(next_pad, k2, v.borrow(), dp);
+                                    for k99 in new_row {
+                                        row_vec.push(k99);
+                                    }
+                                }
+                            }
+                        }
+                        
+                        // for (k13, v13) in k12.fields() {
+                        //     let new_row = draw(next_pad, k13, v13, dp);
+                        //     for k99 in new_row {
+                        //         row_vec.push(k99);
+                        //     }
+                        // }
                     }
                 }
+    
+                let b_new_row_vec = row_vec.clone();
+                let mut is_enable = false;
+        
+                but.set_callback(move |_| {
+        
+                    if !is_enable {
+                        is_enable = true;
+                        for mut l88 in b_new_row_vec.clone() {
+                            l88.deactivate();
+                            l88.hide();
+                        }
+                    } else {
+                        is_enable = false;
+                        for mut l88 in b_new_row_vec.clone() {
+                            l88.activate();
+                            l88.show();
+                        }
+                    }
+                });
+            }else {
+                let _ = button::Button::new(160, 200, 80, 40, "empty");
+                row.end();
+                row.set_margins(pad, 0, 0, 0);
             }
-        }
 
-        let b_new_row_vec = row_vec.clone();
-        let mut is_enable = false;
 
-        but.set_callback(move |_| {
-
-            if !is_enable {
-                is_enable = true;
-                for mut l88 in b_new_row_vec.clone() {
-                    l88.deactivate();
-                    l88.hide();
-                }
-            } else {
-                is_enable = false;
-                for mut l88 in b_new_row_vec.clone() {
-                    l88.activate();
-                    l88.show()
-                }
-            }
-
-            println!("{:?}", b_new_row_vec);
-        });
+        } 
     }
 
-    return row;
+    let mut final_row_vec: Vec<group::Flex> = Vec::new();
+    final_row_vec.push(row);
+
+    for k89 in row_vec {
+        final_row_vec.push(k89);
+    }
+
+    return final_row_vec;
 }

@@ -492,6 +492,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "fltk-theme"
+version = "0.1.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9afb12df6ca9a5dd7b046f48551b01c67b1d195466bdcce45535b4295ec7cf43"
+dependencies = [
+ "fltk",
+]
+
+[[package]]
 name = "flume"
 version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -641,6 +650,7 @@ dependencies = [
  "anyhow",
  "flex_test",
  "fltk",
+ "fltk-theme",
  "gui_reflect",
  "image",
  "once_cell",

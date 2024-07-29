@@ -9,6 +9,9 @@ use once_cell::sync::Lazy;
 use prost_reflect::DescriptorPool;
 use gui_reflect;
 
+use fltk_theme::{ColorTheme, color_themes};
+use fltk_theme::{WidgetTheme, ThemeType};
+
 use fltk::{
     app,
     window::Window,
@@ -56,7 +59,8 @@ fn main() {
         r#type: Type::DwarfPlanet.into(),
         mean_radius: 123.23,
         mass: 234234.34,
-        satellites: vec![s1, s2],
+        satellites: vec![],
+        is_human: false,
     };
 
     let p2 = Planet{
@@ -66,6 +70,7 @@ fn main() {
         mean_radius: 99.23,
         mass: 555.34,
         satellites: vec![s3],
+        is_human: true,
     };
 
     let p1_test = p1.clone();
@@ -91,7 +96,13 @@ fn main() {
     _ = gui_reflect::print::print_proto(s1);
 
     let app: app::App = app::App::default().with_scheme(app::Scheme::Gtk);
-    app::background(221, 221, 221);
+    let theme = ColorTheme::from_colormap(color_themes::DARK_THEME);
+    theme.apply();
+    
+    let widget_theme = WidgetTheme::new(ThemeType::Dark);
+    widget_theme.apply();
+
+    // app::background(221, 221, 221);
 
     let mut wind = Window::default()
         .with_size(700, 450)
@@ -100,8 +111,9 @@ fn main() {
 
     let mut tab = Tabs::default_fill();
 
-    let grp1 = Flex::default_fill().with_label("Planet 1\t\t").row();
+    let mut grp1 = Flex::default_fill().with_label("Planet 1\t\t").row();
     _ = gui_reflect::draw::draw_proto(p1_test1, &DESCRIPTOR_POOL);
+    grp1.make_resizable(false);
     grp1.end();
 
     let grp2 = Flex::default_fill().with_label("Planet 2\t\t").row();
@@ -116,8 +128,11 @@ fn main() {
     _ = gui_reflect::draw::draw_proto(s11, &DESCRIPTOR_POOL);
     grp2.end();
 
+    
     tab.end();
     tab.auto_layout();
+
+    // wind.set
 
 
     wind.make_resizable(true);

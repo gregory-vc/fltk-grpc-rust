@@ -3,19 +3,19 @@ extern crate chrono;
 use std::borrow::Borrow;
 
 use anyhow::Ok;
+use anyhow::Result;
 use chrono::prelude::*;
 use enums::Align;
 use enums::CallbackTrigger;
 use enums::Color;
-use prost_reflect::DynamicMessage;
-use prost_reflect::ReflectMessage;
-use prost_reflect::FieldDescriptor;
-use prost_reflect::Value;
-use anyhow::Result;
 use fltk::{prelude::*, *};
 use fltk_calendar::calendar;
-use prost_reflect::DescriptorPool;
 use menu::Choice;
+use prost_reflect::DescriptorPool;
+use prost_reflect::DynamicMessage;
+use prost_reflect::FieldDescriptor;
+use prost_reflect::ReflectMessage;
+use prost_reflect::Value;
 
 struct MyFrame {
     #[allow(dead_code)]
@@ -30,13 +30,12 @@ impl MyFrame {
         f.set_label(f_name);
         f.set_label_size(12);
         f.set_align(Align::Center);
-    
+
         Self { f }
     }
 }
 
-struct MyInput {
-}
+struct MyInput {}
 
 impl MyInput {
     pub fn new(v: &Value, k: String, dp: &DescriptorPool) -> MyInput {
@@ -71,7 +70,7 @@ impl MyInput {
 
             "google.protobuf.Timestamp" => {
                 let mut ipt: input::Input = input::Input::default();
-                
+
                 if let Some(k55) = v.as_message() {
                     if let Some(s55) = k55.get_field_by_name("seconds").as_ref() {
                         if let Some(vl) = s55.as_i64() {
@@ -104,10 +103,10 @@ impl MyInput {
                         chce.set_value(vv1);
                     }
                 }
-            },
+            }
         }
 
-        Self {  }
+        Self {}
     }
 }
 
@@ -123,10 +122,9 @@ pub fn draw_proto(event: impl ReflectMessage, dp: &DescriptorPool) -> Result<()>
     let mut col = group::Flex::default_fill().column();
     col.set_margin(10);
 
-
     for k in dp.all_messages() {
         if message.descriptor().full_name() == k.full_name() {
-            for k2 in  k.fields() {
+            for k2 in k.fields() {
                 let v = message.get_field(&k2);
                 draw(10, k2, v.borrow(), dp);
             }
@@ -166,10 +164,9 @@ fn draw(pad: i32, k: FieldDescriptor, v: &Value, dp: &DescriptorPool) -> Vec<gro
                 row.set_margins(pad, 0, 0, 0);
                 for k11 in v11.iter() {
                     if let Some(k12) = k11.as_message() {
-    
                         for k in dp.all_messages() {
                             if k12.descriptor().full_name() == k.full_name() {
-                                for k2 in  k.fields() {
+                                for k2 in k.fields() {
                                     let v = k12.get_field(&k2);
                                     let new_row = draw(next_pad, k2, v.borrow(), dp);
                                     for k99 in new_row {
@@ -178,21 +175,13 @@ fn draw(pad: i32, k: FieldDescriptor, v: &Value, dp: &DescriptorPool) -> Vec<gro
                                 }
                             }
                         }
-                        
-                        // for (k13, v13) in k12.fields() {
-                        //     let new_row = draw(next_pad, k13, v13, dp);
-                        //     for k99 in new_row {
-                        //         row_vec.push(k99);
-                        //     }
-                        // }
                     }
                 }
-    
+
                 let b_new_row_vec = row_vec.clone();
                 let mut is_enable = false;
-        
+
                 but.set_callback(move |_| {
-        
                     if !is_enable {
                         is_enable = true;
                         for mut l88 in b_new_row_vec.clone() {
@@ -207,14 +196,12 @@ fn draw(pad: i32, k: FieldDescriptor, v: &Value, dp: &DescriptorPool) -> Vec<gro
                         }
                     }
                 });
-            }else {
+            } else {
                 let _ = button::Button::new(160, 200, 80, 40, "empty");
                 row.end();
                 row.set_margins(pad, 0, 0, 0);
             }
-
-
-        } 
+        }
     }
 
     let mut final_row_vec: Vec<group::Flex> = Vec::new();

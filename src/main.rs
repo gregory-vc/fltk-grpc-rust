@@ -1,16 +1,24 @@
 use fltk::{
-    app, button::*, enums::{Align, Color}, frame::{self, Frame}, group::{Flex, Tabs}, text::{TextBuffer, TextDisplay},
-     input::Input, menu::Choice, prelude::{GroupExt, InputExt, MenuExt, WidgetBase, WidgetExt, WindowExt}, window::Window,
-     prelude::*,
+    app,
+    button::*,
+    enums::{Align, Color},
+    frame::{self, Frame},
+    group::{Flex, Tabs},
+    input::Input,
+    menu::Choice,
+    prelude::*,
+    prelude::{GroupExt, InputExt, MenuExt, WidgetBase, WidgetExt, WindowExt},
+    text::{TextBuffer, TextDisplay},
+    window::Window,
 };
-use tonic::{transport::Server, Request, Response, Status};
+use hello_world::greeter_client::GreeterClient;
 use hello_world::greeter_server::{Greeter, GreeterServer};
 use hello_world::{HelloReply, HelloRequest};
-use std::thread;
-use std::sync::{Arc, Mutex};
-use hello_world::greeter_client::GreeterClient;
 use once_cell::sync::Lazy;
 use prost_reflect::DescriptorPool;
+use std::sync::{Arc, Mutex};
+use std::thread;
+use tonic::{transport::Server, Request, Response, Status};
 
 pub mod hello_world {
     tonic::include_proto!("helloworld");
@@ -26,7 +34,7 @@ pub struct SharedData {
 #[derive(Debug, Default)]
 struct Shared {
     out: Mutex<TextBuffer>,
-    frame: Mutex<Frame>
+    frame: Mutex<Frame>,
 }
 
 pub static DESCRIPTOR_POOL: Lazy<DescriptorPool> = Lazy::new(|| {
@@ -36,25 +44,23 @@ pub static DESCRIPTOR_POOL: Lazy<DescriptorPool> = Lazy::new(|| {
     .unwrap()
 });
 
-
-
 impl SharedData {
     pub fn new(oo: TextBuffer, ff: Frame) -> Self {
         Self {
             shared: Arc::new(Shared {
                 out: Mutex::new(oo),
-                frame: Mutex::new(ff)
-            })
+                frame: Mutex::new(ff),
+            }),
         }
     }
 
-    pub fn update(&self, key: String)  {
+    pub fn update(&self, key: String) {
         let mut oo3 = self.shared.out.lock().unwrap();
         oo3.append(&key);
         oo3.append("\n");
     }
 
-    pub fn count(&self)  {
+    pub fn count(&self) {
         let mut oo3 = self.shared.frame.lock().unwrap();
         let label = (oo3.label().parse::<i32>().unwrap() + 1).to_string();
         oo3.set_label(&label);
@@ -70,7 +76,7 @@ pub struct MyGreeter {
 impl Greeter for MyGreeter {
     async fn say_hello(
         &self,
-        request: Request<HelloRequest>, 
+        request: Request<HelloRequest>,
     ) -> Result<Response<HelloReply>, Status> {
         println!("Got a request: {:?}", request);
         self.data.update(format!("Got a request: {:?}", request));
@@ -98,10 +104,7 @@ async fn server(out1: TextBuffer, ff1: Frame) -> Result<(), Box<dyn std::error::
 
     let svc = GreeterServer::with_interceptor(greeter, intercept);
 
-    Server::builder()
-        .add_service(svc)
-        .serve(addr)
-        .await?;
+    Server::builder().add_service(svc).serve(addr).await?;
 
     Ok(())
 }
@@ -131,7 +134,7 @@ fn draw_gallery() -> (TextBuffer, Frame) {
     grp1.fixed(&col, 160);
     col.set_pad(10);
     col.set_margin(10);
-   
+
     let mut chce = Choice::default();
     chce.add_choice("Text");
     chce.add_choice("Bool");
@@ -139,7 +142,6 @@ fn draw_gallery() -> (TextBuffer, Frame) {
 
     let mut _but6 = ReturnButton::default().with_label("Return");
     col.end();
-
 
     let mut col = Flex::default().column();
     grp1.fixed(&col, 400);
@@ -160,8 +162,8 @@ fn draw_gallery() -> (TextBuffer, Frame) {
     col2.set_margin(10);
 
     let mut count = frame::Frame::default()
-    .with_label("0")
-    .with_align(Align::Center);
+        .with_label("0")
+        .with_align(Align::Center);
 
     col2.end();
 
@@ -181,14 +183,12 @@ fn draw_gallery() -> (TextBuffer, Frame) {
 
     let wrapped_inp = Arc::new(inp);
 
-
     _but6.set_callback(move |_| {
         let inp = wrapped_inp.clone();
-        
+
         let _ = thread::spawn(|| {
-            let _= req_client(inp);
+            let _ = req_client(inp);
         });
-       
     });
 
     col2.end();
@@ -200,7 +200,6 @@ fn draw_gallery() -> (TextBuffer, Frame) {
 }
 
 fn main() {
-
     let app = app::App::default().with_scheme(app::Scheme::Gtk);
     app::background(221, 221, 221);
 
@@ -214,8 +213,6 @@ fn main() {
     thread::spawn(move || {
         let _ = server(oo4, fr5);
     });
-
-
 
     wind.make_resizable(true);
     wind.end();

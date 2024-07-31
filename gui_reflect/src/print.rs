@@ -1,8 +1,8 @@
-use prost_reflect::DynamicMessage;
-use prost_reflect::ReflectMessage;
-use prost_reflect::FieldDescriptor;
-use prost_reflect::Value;
 use anyhow::Result;
+use prost_reflect::DynamicMessage;
+use prost_reflect::FieldDescriptor;
+use prost_reflect::ReflectMessage;
+use prost_reflect::Value;
 
 fn proto2dynamic(proto: impl ReflectMessage) -> Result<DynamicMessage> {
     Ok(DynamicMessage::decode(
@@ -12,7 +12,7 @@ fn proto2dynamic(proto: impl ReflectMessage) -> Result<DynamicMessage> {
 }
 
 fn print_message(del: &String, k: FieldDescriptor, v: &Value) {
-    let next_del = del.to_owned()+">";
+    let next_del = del.to_owned() + ">";
     if !k.is_list() {
         println!("{} {}, {}, {:?}", del, k.full_name(), v, k.kind());
     } else {
@@ -24,7 +24,7 @@ fn print_message(del: &String, k: FieldDescriptor, v: &Value) {
                     for (k13, v13) in k12.fields() {
                         print_message(&next_del, k13, v13);
                     }
-                }else {
+                } else {
                     println!("------>> empty");
                 }
             }

@@ -1,16 +1,22 @@
 use fltk::{
-    app, button::*, frame::Frame, group::{Flex, Tabs}, text::TextBuffer,
-     input::Input, menu::Choice, prelude::{GroupExt, InputExt, MenuExt, WidgetBase, WidgetExt, WindowExt}, window::Window,
-
+    app,
+    button::*,
+    frame::Frame,
+    group::{Flex, Tabs},
+    input::Input,
+    menu::Choice,
+    prelude::{GroupExt, InputExt, MenuExt, WidgetBase, WidgetExt, WindowExt},
+    text::TextBuffer,
+    window::Window,
 };
-use tonic::{ Request, Response, Status};
+use hello_world::greeter_client::GreeterClient;
 use hello_world::greeter_server::Greeter;
 use hello_world::{HelloReply, HelloRequest};
-use std::thread;
-use std::sync::{Arc, Mutex};
-use hello_world::greeter_client::GreeterClient;
 use once_cell::sync::Lazy;
 use prost_reflect::DescriptorPool;
+use std::sync::{Arc, Mutex};
+use std::thread;
+use tonic::{Request, Response, Status};
 
 pub mod hello_world {
     tonic::include_proto!("helloworld");
@@ -24,7 +30,7 @@ pub struct SharedData {
 #[derive(Debug, Default)]
 struct Shared {
     out: Mutex<TextBuffer>,
-    frame: Mutex<Frame>
+    frame: Mutex<Frame>,
 }
 
 pub static DESCRIPTOR_POOL: Lazy<DescriptorPool> = Lazy::new(|| {
@@ -34,24 +40,23 @@ pub static DESCRIPTOR_POOL: Lazy<DescriptorPool> = Lazy::new(|| {
     .unwrap()
 });
 
-
 impl SharedData {
     pub fn new(oo: TextBuffer, ff: Frame) -> Self {
         Self {
             shared: Arc::new(Shared {
                 out: Mutex::new(oo),
-                frame: Mutex::new(ff)
-            })
+                frame: Mutex::new(ff),
+            }),
         }
     }
 
-    pub fn update(&self, key: String)  {
+    pub fn update(&self, key: String) {
         let mut oo3 = self.shared.out.lock().unwrap();
         oo3.append(&key);
         oo3.append("\n");
     }
 
-    pub fn count(&self)  {
+    pub fn count(&self) {
         let mut oo3 = self.shared.frame.lock().unwrap();
         let label = (oo3.label().parse::<i32>().unwrap() + 1).to_string();
         oo3.set_label(&label);
@@ -67,7 +72,7 @@ pub struct MyGreeter {
 impl Greeter for MyGreeter {
     async fn say_hello(
         &self,
-        request: Request<HelloRequest>, 
+        request: Request<HelloRequest>,
     ) -> Result<Response<HelloReply>, Status> {
         println!("Got a request: {:?}", request);
         self.data.update(format!("Got a request: {:?}", request));
@@ -98,7 +103,7 @@ async fn req_client(ss2: Arc<Input>) -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-fn draw_gallery()  {
+fn draw_gallery() {
     let mut tab = Tabs::default_fill();
 
     let mut grp1 = Flex::default_fill().with_label("Client\t\t").row();
@@ -126,24 +131,20 @@ fn draw_gallery()  {
     let wrapped_inp = Arc::new(inp);
     _but6.set_callback(move |_| {
         let inp = wrapped_inp.clone();
-        
+
         let _ = thread::spawn(|| {
-            let _= req_client(inp);
+            let _ = req_client(inp);
         });
-       
     });
 
     col.end();
     grp1.end();
 
-    
     tab.end();
     tab.auto_layout();
-
 }
 
 fn main() {
-
     let app = app::App::default().with_scheme(app::Scheme::Gtk);
     app::background(221, 221, 221);
 
@@ -153,8 +154,6 @@ fn main() {
         .center_screen();
 
     draw_gallery();
-
-
 
     wind.make_resizable(true);
     wind.end();

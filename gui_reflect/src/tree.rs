@@ -18,7 +18,7 @@ use prost_reflect::ReflectMessage;
 use prost_reflect::Value;
 
 static COFACTOR: utils::oncelock::Lazy<i32> =
-    utils::oncelock::Lazy::new(|| (app::font_size() as f64 * 3.0) as i32);
+    utils::oncelock::Lazy::new(|| (app::font_size() as f64 * 2.0) as i32);
 
 fn prep_tree(t: &mut tree::Tree) {
     if let Some(root) = t.next(&t.first().unwrap()) {
@@ -97,7 +97,7 @@ fn draw(f_name: &str, mut tr: MyTree, dp: &DescriptorPool, k: FieldDescriptor, v
     // let mut row_vec: Vec<group::Flex> = Vec::new();
 
     if !k.is_list() {
-        tr.add(&format!("{}/{}", f_name, k.full_name()));
+        tr.add(&format!("{}/{}", f_name, k.name()));
         // let name = k.full_name();
         // let _ = MyFrame::new(&name, enums::Color::DarkMagenta);
         // let nn = format!("{:?}", k.kind());
@@ -107,6 +107,8 @@ fn draw(f_name: &str, mut tr: MyTree, dp: &DescriptorPool, k: FieldDescriptor, v
         // row.end();
         // row.set_margins(pad, 0, 0, 0);
     } else {
+        let n_name = k.name();
+        tr.add(&format!("{}/{}", f_name, n_name));
         // let name = k.full_name();
         // let _ = MyFrame::new(&name, enums::Color::Inactive);
         // let nn = format!("{:?}", k.kind());
@@ -117,13 +119,20 @@ fn draw(f_name: &str, mut tr: MyTree, dp: &DescriptorPool, k: FieldDescriptor, v
                 // let mut but = button::Button::new(160, 200, 80, 40, ">");
                 // row.end();
                 // row.set_margins(pad, 0, 0, 0);
+                let mut i = 0;
                 for k11 in v11.iter() {
+                    i += 1;
                     if let Some(k12) = k11.as_message() {
                         for k in dp.all_messages() {
                             if k12.descriptor().full_name() == k.full_name() {
+                                let next_node =
+                                    &format!("{}/{}/{} {}", f_name, n_name, k.name(), i);
+                                tr.add(&format!("{}/{}/{} {}", f_name, n_name, k.name(), i));
+
                                 for k2 in k.fields() {
                                     let v = k12.get_field(&k2);
-                                    // let new_row = draw(next_pad, k2, v.borrow(), dp);
+                                    // draw(next_node, tr, dp, k, v)
+                                    draw(next_node, MyTree { t: tr.t.clone() }, dp, k2, v.borrow());
                                     // for k99 in new_row {
                                     //     row_vec.push(k99);
                                     // }

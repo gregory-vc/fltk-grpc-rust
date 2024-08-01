@@ -27,7 +27,7 @@ fn main() {
     col.end();
     scroll.end();
     scroll.resizable(&col);
-    row.fixed(&scroll, 200);
+    row.fixed(&scroll, 400);
     row.end();
     win.end();
     win.show_with_env_args();

@@ -1,4 +1,8 @@
-use fltk::{prelude::*, *};
+use fltk::{
+    group::{Flex, Tabs},
+    prelude::*,
+    *,
+};
 use gui_reflect;
 mod data;
 use once_cell::sync::Lazy;
@@ -12,25 +16,17 @@ pub static DESCRIPTOR_POOL: Lazy<DescriptorPool> = Lazy::new(|| {
 });
 
 fn main() {
-    let a = app::App::default().with_scheme(app::Scheme::Gtk);
-    let mut win = window::Window::default().with_size(800, 600);
-    let mut row = group::Flex::default_fill().row();
-    let scroll = group::Scroll::default();
-    let mut col = group::Pack::default().with_type(group::PackType::Vertical);
+    let a = app::App::default();
+    let mut win = window::Window::default()
+        .with_size(800, 600)
+        .center_screen();
 
     let obj = data::get();
-    _ = gui_reflect::tree::draw_tree(obj.p1, &DESCRIPTOR_POOL);
-    _ = gui_reflect::tree::draw_tree(obj.p2, &DESCRIPTOR_POOL);
-    _ = gui_reflect::tree::draw_tree(obj.s1, &DESCRIPTOR_POOL);
     _ = gui_reflect::tree::draw_tree(obj.st1, &DESCRIPTOR_POOL);
 
-    col.end();
-    scroll.end();
-    scroll.resizable(&col);
-    row.fixed(&scroll, 400);
-    row.end();
     win.end();
-    win.show_with_env_args();
-    col.resize(scroll.x(), scroll.y(), scroll.w(), scroll.h());
+    win.make_resizable(true);
+    win.show();
+
     a.run().unwrap();
 }

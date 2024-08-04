@@ -52,7 +52,6 @@ fn main() {
         .center_screen();
 
     let mut tab = Tabs::default_fill();
-
     let mut grp1 = Flex::default_fill().with_label("Planet 1\t\t").row();
     _ = gui_reflect::draw::draw_proto(p1_test1, &DESCRIPTOR_POOL);
     grp1.make_resizable(false);

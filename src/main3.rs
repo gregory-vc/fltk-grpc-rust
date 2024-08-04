@@ -15,7 +15,7 @@ fn main() {
     let a = app::App::default().with_scheme(app::Scheme::Gtk);
     let mut win = window::Window::default().with_size(800, 600);
     let mut row = group::Flex::default_fill().row();
-    let mut scroll = group::Scroll::default();
+    let scroll = group::Scroll::default();
     let mut col = group::Pack::default().with_type(group::PackType::Vertical);
 
     let obj = data::get();

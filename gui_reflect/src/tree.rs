@@ -98,6 +98,7 @@ fn draw(f_name: &str, mut tr: MyTree, dp: &DescriptorPool, k: FieldDescriptor, v
 
     if !k.is_list() {
         tr.add(&format!("{}/{}", f_name, k.name()));
+        tr.callback_item()
         // let name = k.full_name();
         // let _ = MyFrame::new(&name, enums::Color::DarkMagenta);
         // let nn = format!("{:?}", k.kind());

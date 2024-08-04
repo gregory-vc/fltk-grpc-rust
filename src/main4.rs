@@ -1,97 +1,70 @@
-use fltk::{prelude::*, *};
+extern crate reflection_derive;
+use reflection_derive::Reflection;
 
-const FILE: &[&str] = &[
-    "13 11 3 1",
-    "   c None",
-    "x  c #ffffff",
-    "@  c #202060",
-    "   @@@@@@@   ",
-    "  @xxxxxx@   ",
-    " @xxxxxxx@   ",
-    " @xxxxxxx@   ",
-    " @xxxxxxx@   ",
-    " @xxxxxxx@   ",
-    " @xxxxxxx@   ",
-    " @xxxxxxx@   ",
-    " @xxxxxxx@   ",
-    " @xxxxxxx@   ",
-    " @@@@@@@@@   ",
-];
+extern crate reflection;
+use reflection::{Member, Reflection};
+
+use trees;
+use trees::Node;
 
 fn main() {
-    let icon = image::Pixmap::new(FILE).unwrap();
+    #[derive(Reflection)]
+    enum Foo {
+        Bar { a: u64 },
+        Bla { b: u64 },
+    }
 
-    let app_root = app::App::default();
-
-    let mut win = window::Window::default()
-        .with_size(300, 400)
-        .center_screen();
-
-    let mut tree = tree::Tree::default().size_of_parent().center_of_parent();
-    tree.set_show_root(false);
-    tree.set_item_draw_mode(tree::TreeItemDrawMode::LabelAndWidget);
-    tree.set_widget_margin_left(0);
-
-    tree.add("Route A");
-    tree.add("Route A/Node 1");
-    tree.add("Route A/Node 2");
-    tree.add("Route B");
-    tree.add("Route B/Node 1");
-
-    let mut btn = frame::Frame::default().with_size(14, 14);
-    btn.set_image(Some(icon));
-    btn.handle(|_, evt| match evt {
-        enums::Event::Push => {
-            println!("button pressed");
-            true
+    fn schema_to_string(node: &Node<Member>, nth: usize, level: usize) -> String {
+        match node.data {
+            Member::Field(ref field) => {
+                if field.ty == reflection::Type::Enum {
+                    format!(
+                        "{0}type: {1:?},\n{0}name: {2:?},\n{0}cases: {{\n{3}{0}}}",
+                        " ".repeat(level * 4),
+                        &field.tyname.clone().unwrap_or_default(),
+                        field.id,
+                        members_to_string(node, level)
+                    )
+                } else {
+                    format!(
+                        "{0}type: {1:?},\n{0}name: {2:?},{3}",
+                        " ".repeat(level * 4),
+                        &field.tyname.clone().unwrap_or_default(),
+                        field.id,
+                        members_to_string(node, level)
+                    )
+                }
+            }
+            Member::Variant(ref variant) => format!(
+                "{0}{1} => {{\n    {0}type: \"enum_val\",\n    {0}name: {2:?},{3}{0}}}",
+                " ".repeat(level * 4),
+                nth,
+                variant.id,
+                members_to_string(node, level + 1)
+            ),
         }
-        _ => false,
-    });
+    }
 
-    let mut item = tree::TreeItem::new(&tree, "Example Node");
-    item.draw_item_content(|item, render| {
-        let x = item.label_x();
-        let y = item.label_y();
-        let w = item.label_w();
-        let h = item.label_h();
-        let txt = match item.label() {
-            Some(s) => s,
-            None => String::new(),
-        };
-        let txt_len = draw::measure(&txt, false).0;
-
-        if render {
-            if item.is_selected() {
-                draw::draw_rect_fill(x, y, w, h, enums::Color::DarkBlue);
-                draw::set_draw_color(enums::Color::White);
-            } else {
-                draw::draw_rect_fill(x, y, w, h, item.label_bgcolor());
-                draw::set_draw_color(item.label_fgcolor());
-            }
-
-            draw::draw_text2(&txt, x, y, w, h, enums::Align::Left);
-
-            if let Some(mut wid) = item.try_widget() {
-                wid.set_damage(true);
-            }
-
-            if let Some(mut wid) = item.try_widget() {
-                // the widget needs to be manually positioned during each render
-                let wx = (x + txt_len + 20).max(x + (w - 20));
-                wid.resize(wx, wid.y(), 14, wid.h());
-            }
+    fn members_to_string(node: &Node<Member>, level: usize) -> String {
+        let mut s = String::new();
+        let mut nth = 0usize;
+        for child in node.iter() {
+            s.push_str(&(schema_to_string(child, nth, level + 1) + &"\n"));
+            nth += 1;
         }
+        if nth == 0 {
+            String::new()
+        } else {
+            if let Member::Field(ref field) = node.data {
+                if field.ty == reflection::Type::Enum {
+                    return s;
+                }
+            }
+            format!("\n{0}fields: [\n{1}{0}]\n", " ".repeat(level * 4), s)
+        }
+    }
 
-        // this returned value has little effect in this context
-        x + txt_len
-    });
-    item.set_widget(&btn);
+    let out = schema_to_string(Foo::schemata().root(), 0, 0);
 
-    tree.add_item("Route A/234234234", &item);
-
-    win.end();
-    win.make_resizable(true);
-    win.show();
-
-    app_root.run().unwrap();
+    println!("{}", out)
 }

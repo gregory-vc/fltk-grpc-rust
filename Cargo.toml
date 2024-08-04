@@ -44,6 +44,9 @@ anyhow = "1.0.86"
 gui_reflect = { path = "gui_reflect" }
 flex_test = { path = "flex_test" }
 fltk-theme = "=0.1.4"
+reflection = "0.1.3"
+trees = "=0.2.1"
+reflection_derive = "0.1.1"
 
 [build-dependencies]
 tonic-build = "0.12"

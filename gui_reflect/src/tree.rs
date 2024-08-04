@@ -1,13 +1,8 @@
 extern crate chrono;
-
-use std::borrow::Borrow;
-
 use anyhow::Ok;
 use anyhow::Result;
 use chrono::prelude::*;
-use enums::Align;
 use enums::CallbackTrigger;
-use enums::Color;
 use fltk::{prelude::*, *};
 use fltk_calendar::calendar;
 use menu::Choice;
@@ -16,6 +11,7 @@ use prost_reflect::DynamicMessage;
 use prost_reflect::FieldDescriptor;
 use prost_reflect::ReflectMessage;
 use prost_reflect::Value;
+use std::borrow::Borrow;
 
 struct MyTree {
     t: tree::Tree,
@@ -80,14 +76,10 @@ impl MyInput {
                 }
 
                 if let Some(mut wid) = item.try_widget() {
-                    // the widget needs to be manually positioned during each render
                     let wx = (x + txt_len + 20).max(x + (w - 210));
-                    // println!("x: {}, txt_len: {}, w: {} = wx: {}", x, txt_len, w, wx);
                     wid.resize(wx, wid.y(), 200, wid.h());
                 }
             }
-
-            // this returned value has little effect in this context
             x + txt_len
         });
 
@@ -175,9 +167,6 @@ impl MyInput {
 
 pub fn draw_tree(event: impl ReflectMessage, dp: &DescriptorPool) -> Result<()> {
     let message: prost_reflect::DynamicMessage = proto2dynamic(event)?;
-    // let mut col = group::Flex::default_fill().column();
-    // col.set_margin(10);
-
     let mut t = MyTree::default();
     t.add(message.descriptor().full_name());
 
@@ -196,44 +185,20 @@ pub fn draw_tree(event: impl ReflectMessage, dp: &DescriptorPool) -> Result<()> 
         }
     }
 
-    // t.end();
-    // col.end();
-    // col.set_pad(10);
-
     std::result::Result::Ok(())
 }
 
 fn draw(f_name: &str, mut tr: MyTree, dp: &DescriptorPool, k: FieldDescriptor, v: &Value) {
-    // let mut row: group::Flex = group::Flex::default().row();
-    // let next_pad = pad + 40;
-    // let mut row_vec: Vec<group::Flex> = Vec::new();
-
     if !k.is_list() {
         let n_name = k.name();
-
-        // tr.callback_item()
-        // let name = k.full_name();
-        // let _ = MyFrame::new(&name, enums::Color::DarkMagenta);
-        // let nn = format!("{:?}", k.kind());
-        // let _ = MyFrame::new(&nn, enums::Color::DarkMagenta);
         let nn = format!("{:?}", k.kind());
         let _ = MyInput::new(v, nn, dp, f_name, n_name, tr);
-
-        // row.end();
-        // row.set_margins(pad, 0, 0, 0);
     } else {
         let n_name = k.name();
         tr.add(&format!("{}/{}", f_name, n_name));
-        // let name = k.full_name();
-        // let _ = MyFrame::new(&name, enums::Color::Inactive);
-        // let nn = format!("{:?}", k.kind());
-        // let _ = MyFrame::new(&nn, enums::Color::Inactive);
 
         if let Some(v11) = v.as_list() {
             if v11.len() > 0 {
-                // let mut but = button::Button::new(160, 200, 80, 40, ">");
-                // row.end();
-                // row.set_margins(pad, 0, 0, 0);
                 let mut i = 0;
                 for k11 in v11.iter() {
                     i += 1;
@@ -246,50 +211,13 @@ fn draw(f_name: &str, mut tr: MyTree, dp: &DescriptorPool, k: FieldDescriptor, v
 
                                 for k2 in k.fields() {
                                     let v = k12.get_field(&k2);
-                                    // draw(next_node, tr, dp, k, v)
                                     draw(next_node, MyTree { t: tr.t.clone() }, dp, k2, v.borrow());
-                                    // for k99 in new_row {
-                                    //     row_vec.push(k99);
-                                    // }
                                 }
                             }
                         }
                     }
                 }
-
-                // let b_new_row_vec = row_vec.clone();
-                // let mut is_enable = false;
-
-                // but.set_callback(move |_| {
-
-                //     if !is_enable {
-                //         is_enable = true;
-                //         for mut l88 in b_new_row_vec.clone() {
-                //             l88.deactivate();
-                //             l88.hide();
-                //         }
-                //     } else {
-                //         is_enable = false;
-                //         for mut l88 in b_new_row_vec.clone() {
-                //             l88.activate();
-                //             l88.show();
-                //         }
-                //     }
-                // });
-            } else {
-                // let _ = button::Button::new(160, 200, 80, 40, "empty");
-                // row.end();
-                // row.set_margins(pad, 0, 0, 0);
             }
         }
     }
-
-    // let mut final_row_vec: Vec<group::Flex> = Vec::new();
-    // // final_row_vec.push(row);
-
-    // // for k89 in row_vec {
-    // //     final_row_vec.push(k89);
-    // // }
-
-    // return final_row_vec;
 }

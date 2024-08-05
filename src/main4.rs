@@ -1,17 +1,43 @@
-extern crate reflection_derive;
-use reflection_derive::Reflection;
-
 extern crate reflection;
+extern crate reflection_derive;
 use reflection::{Member, Reflection};
-
+use reflection_derive::Reflection;
 use trees;
 use trees::Node;
 
 fn main() {
     #[derive(Reflection)]
-    enum Foo {
-        Bar { a: u64 },
-        Bla { b: u64 },
+    enum IpAddrKind {
+        V4,
+        V6,
+    }
+
+    #[derive(Reflection)]
+    struct Option {
+        option_name: String,
+    }
+
+    #[derive(Reflection)]
+    struct Username {
+        name: String,
+        source: String,
+        active: bool,
+        option: Vec<Option>,
+    }
+
+    #[derive(Reflection)]
+    enum TimeTime {
+        Tm(u64),
+    }
+
+    #[derive(Reflection)]
+    struct User {
+        active: bool,
+        username: Vec<Username>,
+        email: String,
+        ips: Vec<IpAddrKind>,
+        sign_in_count: u64,
+        register_time: TimeTime,
     }
 
     fn schema_to_string(node: &Node<Member>, nth: usize, level: usize) -> String {
@@ -64,7 +90,7 @@ fn main() {
         }
     }
 
-    let out = schema_to_string(Foo::schemata().root(), 0, 0);
+    let out = schema_to_string(User::schemata().root(), 0, 0);
 
-    println!("{}", out)
+    println!("{}", out);
 }

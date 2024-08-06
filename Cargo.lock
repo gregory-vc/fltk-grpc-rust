@@ -594,6 +594,9 @@ dependencies = [
  "prost-reflect-build",
  "prost-reflect-derive",
  "prost-types",
+ "reflection",
+ "reflection_derive",
+ "trees",
 ]
 
 [[package]]

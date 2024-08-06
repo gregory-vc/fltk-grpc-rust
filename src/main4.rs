@@ -1,9 +1,14 @@
 extern crate reflection;
 extern crate reflection_derive;
-use reflection::{Member, Reflection};
+use reflection::{Reflection, Member};
 use reflection_derive::Reflection;
 use trees;
 use trees::Node;
+
+use fltk::{
+    prelude::*,
+    *,
+};
 
 fn main() {
     #[derive(Reflection)]
@@ -93,4 +98,18 @@ fn main() {
     let out = schema_to_string(User::schemata().root(), 0, 0);
 
     println!("{}", out);
+
+
+    let a = app::App::default();
+    let mut win = window::Window::default()
+        .with_size(800, 600)
+        .center_screen();
+
+    _ = gui_reflect::tree_derive::draw_tree(User::schemata());
+
+    win.end();
+    win.make_resizable(true);
+    win.show();
+
+    a.run().unwrap();
 }

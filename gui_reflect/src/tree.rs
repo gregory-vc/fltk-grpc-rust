@@ -93,7 +93,7 @@ impl MyInput {
             }
 
             "uint64" => {
-                let mut ipt = input::FloatInput::default().with_size(200, 14);
+                let mut ipt = input::IntInput::default().with_size(200, 14);
                 if let Some(vl) = v.as_u64() {
                     ipt.set_value(vl.to_string().as_str());
                 }
@@ -109,9 +109,7 @@ impl MyInput {
             }
 
             "bool" => {
-                let mut but = button::CheckButton::default()
-                    .with_label("enabled")
-                    .with_size(200, 14);
+                let mut but = button::CheckButton::default().with_size(200, 14);
                 if let Some(vl) = v.as_bool() {
                     but.set_value(vl);
                 }

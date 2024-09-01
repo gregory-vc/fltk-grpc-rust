@@ -5,9 +5,9 @@ use fltk::{prelude::*, *};
 use fltk_calendar::calendar;
 use menu::Choice;
 use reflection::Schema;
+use reflection::{Member, Reflection};
 use trees;
 use trees::Node;
-use reflection::{Member, Reflection};
 
 struct MyTree {
     t: tree::Tree,
@@ -28,13 +28,17 @@ widget_extends!(MyTree, tree::Tree, t);
 struct MyInput {}
 
 impl MyInput {
-    pub fn new(
-        k: String,
-        f_name: &str,
-        n_name: &str,
-        mut tr: MyTree,
-    ) -> MyInput {
-        let mut item = tree::TreeItem::new(&tr, n_name);
+    pub fn new(fld: &reflection::Field, f_name: &str, mut tr: MyTree) -> MyInput {
+        let mut n_name: String;
+        if fld.id == "_" {
+            n_name = format!("{}: {}", "1", &fld.tyname.clone().unwrap_or_default());
+        } else {
+            n_name = format!("{}: {}", fld.id, &fld.tyname.clone().unwrap_or_default());
+        }
+
+        let ty = fld.ty;
+
+        let mut item = tree::TreeItem::new(&tr, n_name.as_str());
 
         item.draw_item_content(|item, render| {
             let x = item.label_x();
@@ -70,53 +74,46 @@ impl MyInput {
             x + txt_len
         });
 
-        match k.as_str() {
-            "string" => {
+        match ty {
+            reflection::Type::U64 => {
+                let ipt = input::IntInput::default().with_size(200, 14);
+                item.set_widget(&ipt);
+            }
+            reflection::Type::F64 => {
+                let ipt = input::FloatInput::default().with_size(200, 14);
+                item.set_widget(&ipt);
+            }
+            reflection::Type::Bool => {
+                let but = button::CheckButton::default().with_size(200, 14);
+                item.set_widget(&but);
+            }
+            reflection::Type::String => {
                 let ipt = input::Input::default().with_size(200, 14);
                 item.set_widget(&ipt);
             }
+            reflection::Type::Enum => {
+                if &fld.tyname.clone().unwrap_or_default() == "TimeTime" {
+                    let mut ipt: input::Input = input::Input::default();
 
-            "uint64" => {
-                let ipt = input::FloatInput::default().with_size(200, 14);
-                item.set_widget(&ipt);
+                    ipt.set_trigger(CallbackTrigger::EnterKeyAlways);
+
+                    let mut ipt2 = ipt.clone();
+
+                    ipt.set_callback(move |_| {
+                        let cal = calendar::Calendar::default();
+                        let date = cal.get_date();
+                        if let Some(date) = date {
+                            ipt2.set_value(date.to_string().as_str());
+                        }
+                    });
+
+                    item.set_widget(&ipt);
+                } else {
+                    let mut chce = Choice::default();
+                    item.set_widget(&chce);
+                }
             }
-
-            "float" => {
-                let ipt = input::FloatInput::default().with_size(200, 14);
-                item.set_widget(&ipt);
-            }
-
-            "bool" => {
-                let but = button::CheckButton::default()
-                    .with_label("enabled")
-                    .with_size(200, 14);
-                item.set_widget(&but);
-            }
-
-            "google.protobuf.Timestamp" => {
-                let mut ipt: input::Input = input::Input::default();
-
-                ipt.set_trigger(CallbackTrigger::EnterKeyAlways);
-
-                let mut ipt2 = ipt.clone();
-
-                ipt.set_callback(move |_| {
-                    let cal = calendar::Calendar::default();
-                    let date = cal.get_date();
-                    if let Some(date) = date {
-                        ipt2.set_value(date.to_string().as_str());
-                    }
-                });
-
-                item.set_widget(&ipt);
-            }
-            _ => {
-                let mut chce = Choice::default();
-                // for v55 in en.values() {
-                //     chce.add_choice(v55.name());
-                // }
-                item.set_widget(&chce);
-            }
+            _ => {}
         }
 
         tr.add_item(&format!("{}/{}", f_name, n_name), &item);
@@ -152,40 +149,33 @@ fn schema_to_tree(node: &Node<Member>, mut tr: MyTree, root: String) {
     match node.data {
         Member::Field(ref field) => {
             if field.ty == reflection::Type::Enum {
-                // format!(
-                //     "{0}type: {1:?},\n{0}name: {2:?},\n{0}cases: {{\n{3}{0}}}",
-                //     " ".repeat(level * 4),
-                //     &field.tyname.clone().unwrap_or_default(),
-                //     field.id,
-                //     members_to_string(node, level)
-                // )
-                let nn = format!("{}/{}: {}", root, field.id, &field.tyname.clone().unwrap_or_default());
-                tr.add(nn.as_str());
-                members_to_tree(node, tr, nn);
+                let _ = MyInput::new(field, root.as_str(), tr);
+                // members_to_tree(node, tr, nn);
             } else {
-                let nn = format!("{}/{}: {}", root, field.id, &field.tyname.clone().unwrap_or_default());
-                tr.add(nn.as_str());
+                let nn;
+                if field.id != "_" {
+                    let _ = MyInput::new(field, root.as_str(), MyTree { t: tr.clone() });
+                    nn = format!(
+                        "{}/{}: {}",
+                        root,
+                        field.id,
+                        &field.tyname.clone().unwrap_or_default()
+                    )
+                } else {
+                    nn = format!(
+                        "{}/{}: {}",
+                        root,
+                        1,
+                        &field.tyname.clone().unwrap_or_default()
+                    )
+                }
                 members_to_tree(node, tr, nn);
-                // format!(
-                //     "{0}type: {1:?},\n{0}name: {2:?},{3}",
-                //     " ".repeat(level * 4),
-                //     &field.tyname.clone().unwrap_or_default(),
-                //     field.id,
-                //     members_to_string(node, level)
-                // )
             }
         }
         Member::Variant(ref variant) => {
             let nn = format!("{}/{}", root, variant.id,);
             tr.add(nn.as_str());
             members_to_tree(node, tr, nn);
-            // format!(
-                //     "{0}{1} => {{\n    {0}type: \"enum_val\",\n    {0}name: {2:?},{3}{0}}}",
-                //     " ".repeat(level * 4),
-                //     nth,
-                //     variant.id,
-                //     members_to_string(node, level + 1)
-                // ),
         }
     }
 }
@@ -206,39 +196,5 @@ fn members_to_tree(node: &Node<Member>, mut tr: MyTree, root: String) {
     //         }
     //     }
     //     format!("\n{0}fields: [\n{1}{0}]\n", " ".repeat(level * 4), s)
-    // }
-}
-
-fn draw(f_name: &str, mut tr: MyTree) {
-    // if !k.is_list() {
-    //     let n_name = k.name();
-    //     let nn = format!("{:?}", k.kind());
-    //     let _ = MyInput::new(v, nn, dp, f_name, n_name, tr);
-    // } else {
-    //     let n_name = k.name();
-    //     tr.add(&format!("{}/{}", f_name, n_name));
-
-    //     if let Some(v11) = v.as_list() {
-    //         if v11.len() > 0 {
-    //             let mut i = 0;
-    //             for k11 in v11.iter() {
-    //                 i += 1;
-    //                 if let Some(k12) = k11.as_message() {
-    //                     for k in dp.all_messages() {
-    //                         if k12.descriptor().full_name() == k.full_name() {
-    //                             let next_node =
-    //                                 &format!("{}/{}/{} {}", f_name, n_name, k.name(), i);
-    //                             tr.add(&format!("{}/{}/{} {}", f_name, n_name, k.name(), i));
-
-    //                             for k2 in k.fields() {
-    //                                 let v = k12.get_field(&k2);
-    //                                 draw(next_node, MyTree { t: tr.t.clone() }, dp, k2, v.borrow());
-    //                             }
-    //                         }
-    //                     }
-    //                 }
-    //             }
-    //         }
-    //     }
     // }
 }

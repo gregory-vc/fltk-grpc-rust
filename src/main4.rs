@@ -1,14 +1,11 @@
 extern crate reflection;
 extern crate reflection_derive;
-use reflection::{Reflection, Member};
+use reflection::{Member, Reflection};
 use reflection_derive::Reflection;
 use trees;
 use trees::Node;
 
-use fltk::{
-    prelude::*,
-    *,
-};
+use fltk::{prelude::*, *};
 
 fn main() {
     #[derive(Reflection)]
@@ -32,7 +29,13 @@ fn main() {
 
     #[derive(Reflection)]
     enum TimeTime {
-        Tm(u64),
+        Tm(String),
+    }
+
+    #[derive(Reflection)]
+    struct IP {
+        Val: String,
+        Type: IpAddrKind,
     }
 
     #[derive(Reflection)]
@@ -40,7 +43,7 @@ fn main() {
         active: bool,
         username: Vec<Username>,
         email: String,
-        ips: Vec<IpAddrKind>,
+        ips: Vec<IP>,
         sign_in_count: u64,
         register_time: TimeTime,
     }
@@ -98,7 +101,6 @@ fn main() {
     let out = schema_to_string(User::schemata().root(), 0, 0);
 
     println!("{}", out);
-
 
     let a = app::App::default();
     let mut win = window::Window::default()

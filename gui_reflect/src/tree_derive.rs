@@ -28,7 +28,12 @@ widget_extends!(MyTree, tree::Tree, t);
 struct MyInput {}
 
 impl MyInput {
-    pub fn new(fld: &reflection::Field, f_name: &str, mut tr: MyTree) -> MyInput {
+    pub fn new(
+        node: &Node<Member>,
+        fld: &reflection::Field,
+        f_name: &str,
+        mut tr: MyTree,
+    ) -> MyInput {
         let mut n_name: String;
         if fld.id == "_" {
             n_name = format!("{}: {}", "1", &fld.tyname.clone().unwrap_or_default());
@@ -109,7 +114,15 @@ impl MyInput {
 
                     item.set_widget(&ipt);
                 } else {
-                    let mut chce = Choice::default();
+                    let mut chce: Choice = Choice::default();
+                    for child in node.iter() {
+                        match child.data {
+                            Member::Field(ref field) => {}
+                            Member::Variant(ref variant) => {
+                                chce.add_choice(variant.id);
+                            }
+                        }
+                    }
                     item.set_widget(&chce);
                 }
             }
@@ -149,12 +162,11 @@ fn schema_to_tree(node: &Node<Member>, mut tr: MyTree, root: String) {
     match node.data {
         Member::Field(ref field) => {
             if field.ty == reflection::Type::Enum {
-                let _ = MyInput::new(field, root.as_str(), tr);
-                // members_to_tree(node, tr, nn);
+                let _ = MyInput::new(node, field, root.as_str(), tr);
             } else {
                 let nn;
                 if field.id != "_" {
-                    let _ = MyInput::new(field, root.as_str(), MyTree { t: tr.clone() });
+                    let _ = MyInput::new(node, field, root.as_str(), MyTree { t: tr.clone() });
                     nn = format!(
                         "{}/{}: {}",
                         root,

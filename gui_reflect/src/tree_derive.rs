@@ -136,25 +136,8 @@ impl MyInput {
 }
 
 pub fn draw_tree(event: Schema) -> Result<()> {
-    let mut t = MyTree::default();
+    let t = MyTree::default();
     schema_to_tree(event.root(), t, "".to_string());
-    // t.add(message.descriptor().full_name());
-
-    // for k in dp.all_messages() {
-    //     if message.descriptor().full_name() == k.full_name() {
-    //         for k2 in k.fields() {
-    //             let v = message.get_field(&k2);
-    //             draw(
-    //                 message.descriptor().full_name(),
-    //                 MyTree { t: t.clone() },
-    //                 dp,
-    //                 k2,
-    //                 v.borrow(),
-    //             );
-    //         }
-    //     }
-    // }
-
     std::result::Result::Ok(())
 }
 
@@ -192,21 +175,8 @@ fn schema_to_tree(node: &Node<Member>, mut tr: MyTree, root: String) {
     }
 }
 
-fn members_to_tree(node: &Node<Member>, mut tr: MyTree, root: String) {
+fn members_to_tree(node: &Node<Member>, tr: MyTree, root: String) {
     for child in node.iter() {
-        // let ntr = tr.clone();
         schema_to_tree(child, MyTree { t: tr.clone() }, root.clone());
-        // s.push_str(&(schema_to_string(child, nth, level + 1) + &"\n"));
-        // nth += 1;
     }
-    // if nth == 0 {
-    //     String::new()
-    // } else {
-    //     if let Member::Field(ref field) = node.data {
-    //         if field.ty == reflection::Type::Enum {
-    //             return s;
-    //         }
-    //     }
-    //     format!("\n{0}fields: [\n{1}{0}]\n", " ".repeat(level * 4), s)
-    // }
 }

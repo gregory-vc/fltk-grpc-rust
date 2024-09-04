@@ -1,11 +1,8 @@
 extern crate reflection;
 extern crate reflection_derive;
-use reflection::{Member, Reflection};
-use reflection_derive::Reflection;
-use trees;
-use trees::Node;
-
 use fltk::{prelude::*, *};
+use reflection::Reflection;
+use reflection_derive::Reflection;
 
 fn main() {
     #[derive(Reflection)]
@@ -48,59 +45,7 @@ fn main() {
         register_time: TimeTime,
     }
 
-    fn schema_to_string(node: &Node<Member>, nth: usize, level: usize) -> String {
-        match node.data {
-            Member::Field(ref field) => {
-                if field.ty == reflection::Type::Enum {
-                    format!(
-                        "{0}type: {1:?},\n{0}name: {2:?},\n{0}cases: {{\n{3}{0}}}",
-                        " ".repeat(level * 4),
-                        &field.tyname.clone().unwrap_or_default(),
-                        field.id,
-                        members_to_string(node, level)
-                    )
-                } else {
-                    format!(
-                        "{0}type: {1:?},\n{0}name: {2:?},{3}",
-                        " ".repeat(level * 4),
-                        &field.tyname.clone().unwrap_or_default(),
-                        field.id,
-                        members_to_string(node, level)
-                    )
-                }
-            }
-            Member::Variant(ref variant) => format!(
-                "{0}{1} => {{\n    {0}type: \"enum_val\",\n    {0}name: {2:?},{3}{0}}}",
-                " ".repeat(level * 4),
-                nth,
-                variant.id,
-                members_to_string(node, level + 1)
-            ),
-        }
-    }
-
-    fn members_to_string(node: &Node<Member>, level: usize) -> String {
-        let mut s = String::new();
-        let mut nth = 0usize;
-        for child in node.iter() {
-            s.push_str(&(schema_to_string(child, nth, level + 1) + &"\n"));
-            nth += 1;
-        }
-        if nth == 0 {
-            String::new()
-        } else {
-            if let Member::Field(ref field) = node.data {
-                if field.ty == reflection::Type::Enum {
-                    return s;
-                }
-            }
-            format!("\n{0}fields: [\n{1}{0}]\n", " ".repeat(level * 4), s)
-        }
-    }
-
-    let out = schema_to_string(User::schemata().root(), 0, 0);
-
-    println!("{}", out);
+    _ = gui_reflect::print_derive::print_tree(User::schemata());
 
     let a = app::App::default();
     let mut win = window::Window::default()

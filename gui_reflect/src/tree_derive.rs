@@ -4,8 +4,8 @@ use enums::CallbackTrigger;
 use fltk::{prelude::*, *};
 use fltk_calendar::calendar;
 use menu::Choice;
+use reflection::Member;
 use reflection::Schema;
-use reflection::{Member, Reflection};
 use trees;
 use trees::Node;
 
@@ -34,7 +34,7 @@ impl MyInput {
         f_name: &str,
         mut tr: MyTree,
     ) -> MyInput {
-        let mut n_name: String;
+        let n_name: String;
         if fld.id == "_" {
             n_name = format!("{}: {}", "1", &fld.tyname.clone().unwrap_or_default());
         } else {
@@ -117,7 +117,7 @@ impl MyInput {
                     let mut chce: Choice = Choice::default();
                     for child in node.iter() {
                         match child.data {
-                            Member::Field(ref field) => {}
+                            Member::Field(ref _field) => {}
                             Member::Variant(ref variant) => {
                                 chce.add_choice(variant.id);
                             }
